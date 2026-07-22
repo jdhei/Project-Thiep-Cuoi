@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-typecheck-test-build:
+    name: Lint → Typecheck → Test → Build
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "postgresql://fake:fake@localhost:5432/fake"
+      DIRECT_URL: "postgresql://fake:fake@localhost:5432/fake"
+      APP_URL: "http://localhost:3000"
+      ADMIN_EMAIL: "ci@test.local"
+      ADMIN_PASSWORD_HASH: "$2a$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      SESSION_SECRET: "ci-session-secret-at-least-32-characters-long"
+      IP_HASH_SECRET: "ci-ip-hash-secret-at-least-16-chars"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Production build
+        run: npm run build

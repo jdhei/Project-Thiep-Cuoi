@@ -10,6 +10,7 @@ const envSchema = z.object({
   ADMIN_PASSWORD_HASH: z.string().min(1, "ADMIN_PASSWORD_HASH bắt buộc"),
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET phải >= 32 ký tự"),
   UPLOAD_ROOT: z.string().min(1).default("./storage/uploads"),
+  MEDIA_BASE_URL: z.string().url().optional(),
   IP_HASH_SECRET: z.string().min(16, "IP_HASH_SECRET phải >= 16 ký tự"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   // Cloudflare Zero Trust (optional — bypass nếu không set)

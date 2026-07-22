@@ -9,9 +9,12 @@ import {
   SectionShell,
   LoveStory,
   EventTimeline,
+  Gallery,
+  GiftSection,
   WishList,
 } from "@/components/wedding/sections";
 import { Interactions } from "@/components/ui/Interactions";
+import { MusicPlayer } from "@/components/wedding/MusicPlayer";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 
 type Params = { params: { id: string } };
@@ -76,6 +79,24 @@ export default async function PreviewPage({ params }: Params) {
           </SectionShell>
         )}
 
+        {dto.visibility.gallery && (
+          <SectionShell kick="Khoảnh khắc đẹp" title="Album ảnh">
+            <Gallery items={dto.gallery} />
+          </SectionShell>
+        )}
+
+        {dto.visibility.rsvp && (
+          <SectionShell kick="Xác nhận tham dự" title="RSVP">
+            <p className="text-muted text-sm">RSVP form hiển thị trên trang công khai</p>
+          </SectionShell>
+        )}
+
+        {dto.visibility.gift && (
+          <SectionShell kick="Mừng cưới" title="Gửi quà" tinted>
+            <GiftSection giftData={dto.giftData} />
+          </SectionShell>
+        )}
+
         {dto.visibility.wishes && (
           <SectionShell kick="Gửi trao yêu thương" title="Sổ lời chúc" tinted>
             <WishList wishes={dto.wishes} />
@@ -90,6 +111,9 @@ export default async function PreviewPage({ params }: Params) {
         </section>
 
         <Interactions />
+        {dto.visibility.music && dto.musicUrl && (
+          <MusicPlayer src={dto.musicUrl} />
+        )}
       </main>
     </>
   );

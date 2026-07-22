@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import type { PublicWeddingDto } from "@/features/weddings/public-dto";
+import type { PublicGalleryItem } from "@/features/weddings/public-dto";
 
 function fmt(iso: string): string {
   try {
@@ -16,6 +17,13 @@ export function WeddingHero({ dto }: { dto: PublicWeddingDto }) {
       className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-6 py-20 text-center"
       style={{ background: "radial-gradient(120% 80% at 50% 0%,#fff,#F4ECDD)" }}
     >
+      {dto.coverUrl && (
+        <img
+          src={dto.coverUrl}
+          alt={`${dto.couple.groomName} & ${dto.couple.brideName}`}
+          className="absolute inset-0 h-full w-full object-cover opacity-20"
+        />
+      )}
       <div aria-hidden className="pointer-events-none absolute inset-3.5 rounded border border-gold-soft" />
       <span className="text-xs uppercase tracking-[0.3em] text-gold-deep">
         {dto.title ?? "Trân trọng kính mời"}
@@ -81,6 +89,67 @@ export function EventTimeline({ events }: { events: PublicWeddingDto["events"] }
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+
+export function Gallery({ items }: { items: PublicGalleryItem[] }) {
+  if (items.length === 0) {
+    return <p className="text-muted">Chưa có ảnh nào trong album.</p>;
+  }
+  return (
+    <div className="mx-auto grid max-w-md grid-cols-2 gap-2 sm:grid-cols-3">
+      {items.map((item) => (
+        <div key={item.id} className="group relative aspect-square overflow-hidden rounded-xl">
+          <img
+            src={item.url}
+            alt={item.caption ?? "Ảnh cưới"}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          {item.caption && (
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent px-2 pb-2 pt-6">
+              <span className="text-xs text-white/90">{item.caption}</span>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function RsvpPlaceholder() {
+  return (
+    <div className="mx-auto max-w-md rounded-2xl border border-gold-soft/40 bg-paper p-6 text-center shadow-soft-sm">
+      <p className="font-cormorant text-[1.1rem] text-muted">
+        Chức năng xác nhận tham dự sẽ sớm được cập nhật.
+      </p>
+    </div>
+  );
+}
+
+export function GiftSection({ giftData }: { giftData: Record<string, unknown> | null }) {
+  if (!giftData) {
+    return <p className="text-muted">Chưa có thông tin mừng cưới.</p>;
+  }
+  const bankName = (giftData.bankName as string) ?? "";
+  const accountNumber = (giftData.accountNumber as string) ?? "";
+  const accountHolder = (giftData.accountHolder as string) ?? "";
+  const note = (giftData.note as string) ?? "";
+
+  if (!bankName && !accountNumber) {
+    return <p className="text-muted">Chưa có thông tin mừng cưới.</p>;
+  }
+
+  return (
+    <div className="mx-auto max-w-sm rounded-2xl border border-gold-soft/40 bg-paper p-6 text-center shadow-soft-sm">
+      {bankName && <div className="font-serif text-lg text-gold-deep">{bankName}</div>}
+      {accountNumber && (
+        <div className="mt-1 font-mono text-[1.2rem] tracking-wider text-ink">{accountNumber}</div>
+      )}
+      {accountHolder && <div className="mt-1 text-sm text-muted">{accountHolder}</div>}
+      {note && <p className="mt-3 font-cormorant text-[1rem] italic text-muted">{note}</p>}
     </div>
   );
 }

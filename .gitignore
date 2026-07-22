@@ -1,3 +1,6 @@
+# Staged .new files (applied and cleaned)
+*.new
+
 # dependencies
 /node_modules
 /.pnp

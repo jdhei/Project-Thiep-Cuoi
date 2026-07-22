@@ -8,9 +8,16 @@ import {
   SectionShell,
   LoveStory,
   EventTimeline,
+  Gallery,
+  GiftSection,
   WishList,
 } from "@/components/wedding/sections";
+import { RsvpForm } from "@/components/wedding/RsvpForm";
+import { WishForm } from "@/components/wedding/WishForm";
 import { Interactions } from "@/components/ui/Interactions";
+import { MusicPlayer } from "@/components/wedding/MusicPlayer";
+
+export const dynamic = "force-dynamic";
 
 type Params = { params: { slug: string } };
 
@@ -54,9 +61,28 @@ export default async function WeddingPage({ params }: Params) {
         </SectionShell>
       )}
 
+      {dto.visibility.gallery && (
+        <SectionShell kick="Khoảnh khắc đẹp" title="Album ảnh">
+          <Gallery items={dto.gallery} />
+        </SectionShell>
+      )}
+
+      {dto.visibility.rsvp && (
+        <SectionShell kick="Xác nhận tham dự" title="RSVP">
+          <RsvpForm slug={params.slug} />
+        </SectionShell>
+      )}
+
+      {dto.visibility.gift && (
+        <SectionShell kick="Mừng cưới" title="Gửi quà" tinted>
+          <GiftSection giftData={dto.giftData} />
+        </SectionShell>
+      )}
+
       {dto.visibility.wishes && (
         <SectionShell kick="Gửi trao yêu thương" title="Sổ lời chúc" tinted>
           <WishList wishes={dto.wishes} />
+          <WishForm slug={params.slug} />
         </SectionShell>
       )}
 
@@ -68,6 +94,9 @@ export default async function WeddingPage({ params }: Params) {
       </section>
 
       <Interactions />
+      {dto.visibility.music && dto.musicUrl && (
+        <MusicPlayer src={dto.musicUrl} />
+      )}
     </main>
   );
 }

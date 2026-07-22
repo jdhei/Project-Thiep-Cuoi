@@ -35,6 +35,9 @@ const config: Config = {
       transitionTimingFunction: {
         smooth: "cubic-bezier(.22,1,.36,1)",
       },
+      animation: {
+        "spin-slow": "spin 3s linear infinite",
+      },
     },
   },
   plugins: [],

@@ -27,6 +27,7 @@ export type PublicWeddingDto = {
   coverUrl: string | null;
   musicUrl: string | null;
   primaryColor: string;
+  giftData: Record<string, unknown> | null;
   events: PublicEventDto[];
   gallery: PublicGalleryItem[];
   wishes: PublicWishDto[];
@@ -42,7 +43,8 @@ export type PublicWeddingDto = {
 };
 
 function mediaUrl(id: string): string {
-  return `/media/${id}`;
+  const base = process.env.MEDIA_BASE_URL;
+  return base ? `${base}/${id}` : `/media/${id}`;
 }
 
 /** Chuyển Prisma model (đã include events/media/wishes) thành DTO an toàn cho public. */
@@ -61,6 +63,9 @@ export function toPublicWeddingDto(w: PublishedWedding): PublicWeddingDto {
     coverUrl: cover ? mediaUrl(cover.id) : null,
     musicUrl: w.showMusic && music ? mediaUrl(music.id) : null,
     primaryColor: w.primaryColor ?? "#8A6D3B",
+    giftData: w.showGift && w.giftData
+      ? (JSON.parse(w.giftData) as Record<string, unknown>)
+      : null,
     events: w.events.map((e) => ({
       id: e.id,
       title: e.title,
