@@ -182,13 +182,13 @@
 | TEST-U1 | slug schema: dấu tiếng Việt, khoảng trắng, ký tự đặc biệt, từ cấm | ✅ |
 | TEST-U2 | RSVP schema: số âm, >20, NOT_ATTENDING nhưng >0 | ✅ |
 | TEST-U3 | Public DTO mapper: không chứa phone/ipHash/submissionKey | ✅ |
-| TEST-U4 | Publish validator: thiếu cover/event/date phải lỗi | ⬜ |
+| TEST-U4 | Publish validator: thiếu cover/event/date phải lỗi | ✅ |
 | TEST-U5 | File validator: sai MIME, quá size, extension kép | ✅ |
 
 ### E2E (Playwright) & thủ công
 | Mã | Việc | TT |
 |----|------|----|
-| TEST-E1 | Luồng admin: login→tạo→publish→xem RSVP | ⬜ |
+| TEST-E1 | Luồng admin: login→tạo→publish→xem RSVP | ✅ |
 | TEST-E2 | Luồng khách: mở thiệp→RSVP→lời chúc | ✅ |
 | TEST-M1 | Điện thoại thật (Android Chrome / iPhone Safari), mạng chậm, bàn phím mở form | ⬜ |
 
@@ -209,5 +209,5 @@
 | RSVP | 8 | 8 | 100% |
 | GUEST | 4 | 4 | 100% |
 | UTIL | 6 | 6 | 100% |
-| TEST | 5 | 8 | 63% |
-| **Tổng** | **84** | **87** | **97%** |
+| TEST | 7 | 8 | 88% |
+| **Tổng** | **86** | **87** | **99%** |
