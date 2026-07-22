@@ -1,0 +1,905 @@
+From 0a3d306e55134ae3bf5e4398f7fbe1c98c6acf73 Mon Sep 17 00:00:00 2001
+From: jdhei <jdhei@users.noreply.github.com>
+Date: Wed, 22 Jul 2026 16:27:15 +0000
+Subject: [PATCH] =?UTF-8?q?feat(guest):=20CRUD=20kh=C3=A1ch=20m=E1=BB=9Di?=
+ =?UTF-8?q?=20c=C3=A1=20nh=C3=A2n,=20sinh=20m=C3=A3=20m=E1=BB=9Di,=20link?=
+ =?UTF-8?q?=20=3Fguest=3D=20autofill=20+=20gi=E1=BB=9Bi=20h=E1=BA=A1n=20s?=
+ =?UTF-8?q?=E1=BB=91=20ng=C6=B0=E1=BB=9Di=20(GUEST-01..04,=2089%)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ README.md                                     |   5 +-
+ docs/TASKS-status.md                          |  14 +-
+ .../weddings/[id]/events/EventManager.tsx     |   8 +-
+ .../weddings/[id]/guests/GuestManager.tsx     | 260 ++++++++++++++++++
+ src/app/admin/weddings/[id]/guests/page.tsx   |  47 ++++
+ src/app/admin/weddings/[id]/layout.tsx        |   1 +
+ .../api/public/weddings/[slug]/rsvp/route.ts  |  25 +-
+ src/app/w/[slug]/page.tsx                     |  29 +-
+ src/components/wedding/RsvpForm.tsx           |  28 +-
+ src/features/weddings/guest.actions.ts        | 142 ++++++++++
+ src/features/weddings/guest.schemas.test.ts   |  51 ++++
+ src/features/weddings/guest.schemas.ts        |  51 ++++
+ src/features/weddings/rsvp.schemas.ts         |   7 +
+ 13 files changed, 648 insertions(+), 20 deletions(-)
+ create mode 100644 src/app/admin/weddings/[id]/guests/GuestManager.tsx
+ create mode 100644 src/app/admin/weddings/[id]/guests/page.tsx
+ create mode 100644 src/features/weddings/guest.actions.ts
+ create mode 100644 src/features/weddings/guest.schemas.test.ts
+ create mode 100644 src/features/weddings/guest.schemas.ts
+
+diff --git a/README.md b/README.md
+index d8d4fc6..f10ae7c 100644
+--- a/README.md
++++ b/README.md
+@@ -77,7 +77,7 @@ npm run dev
+ - `docs/TASKS-status.md` — Tiến độ công việc chi tiết
+ - `docs/DECISIONS.md` — Quyết định kiến trúc (ADR)
+ 
+-## Tiến độ (84%)
++## Tiến độ (89%)
+ - ✅ Prototype UI/UX, Setup, Database, Deploy (Vercel + Supabase)
+ - ✅ Admin Auth (login/logout/session/rate-limit/E2E)
+ - ✅ Wedding CRUD (danh sách/tạo/sửa/archive/preview/publish)
+@@ -85,4 +85,5 @@ npm run dev
+ - ✅ Template Public (visibility check, gallery, RSVP, gift, responsive)
+ - ✅ Events & Media (CRUD sự kiện, upload, gallery, music player)
+ - ✅ RSVP & Wishes (form khách, idempotent, hash IP, duyệt lời chúc)
+-- ⬜ Guest (khách mời cá nhân) → Hoàn thiện (export/QR/OG/security)
++- ✅ Guest (khách mời cá nhân — CRUD, mã mời, link ?guest=, giới hạn số người)
++- ⬜ Hoàn thiện (export CSV/QR/OG/security)
+diff --git a/docs/TASKS-status.md b/docs/TASKS-status.md
+index 6fa5a38..ca834fd 100644
+--- a/docs/TASKS-status.md
++++ b/docs/TASKS-status.md
+@@ -150,14 +150,14 @@
+ 
+ ---
+ 
+-## GUEST — Khách mời cá nhân (Giai đoạn 7)  ⬜
++## GUEST — Khách mời cá nhân (Giai đoạn 7)  ✅
+ 
+ | Mã | Việc | TT |
+ |----|------|----|
+-| GUEST-01 | CRUD Guest | ⬜ |
+-| GUEST-02 | Sinh invitationCode ngẫu nhiên (unique) | ⬜ |
+-| GUEST-03 | Link `?guest=code` tự điền tên | ⬜ |
+-| GUEST-04 | Giới hạn numberOfPeople theo maximumPeople của Guest | ⬜ |
++| GUEST-01 | CRUD Guest | ✅ |
++| GUEST-02 | Sinh invitationCode ngẫu nhiên (unique) | ✅ |
++| GUEST-03 | Link `?guest=code` tự điền tên | ✅ |
++| GUEST-04 | Giới hạn numberOfPeople theo maximumPeople của Guest | ✅ |
+ 
+ ---
+ 
+@@ -207,7 +207,7 @@
+ | TPL Template | 7 | 7 | 100% |
+ | MED Media | 7 | 7 | 100% |
+ | RSVP | 8 | 8 | 100% |
+-| GUEST | 0 | 4 | 0% |
++| GUEST | 4 | 4 | 100% |
+ | UTIL | 0 | 6 | 0% |
+ | TEST | 4 | 8 | 50% |
+-| **Tổng** | **73** | **87** | **84%** |
++| **Tổng** | **77** | **87** | **89%** |
+diff --git a/src/app/admin/weddings/[id]/events/EventManager.tsx b/src/app/admin/weddings/[id]/events/EventManager.tsx
+index ad6b681..cf15d4a 100644
+--- a/src/app/admin/weddings/[id]/events/EventManager.tsx
++++ b/src/app/admin/weddings/[id]/events/EventManager.tsx
+@@ -64,7 +64,9 @@ export function EventManager({ weddingId, events: initialEvents }: Props) {
+   async function handleMoveUp(index: number) {
+     if (index === 0) return;
+     const newEvents = [...events];
+-    [newEvents[index - 1], newEvents[index]] = [newEvents[index], newEvents[index - 1]];
++    const tmp = newEvents[index - 1]!;
++    newEvents[index - 1] = newEvents[index]!;
++    newEvents[index] = tmp;
+     setEvents(newEvents);
+     startTransition(async () => {
+       await reorderEventsAction(weddingId, newEvents.map((e) => e.id));
+@@ -74,7 +76,9 @@ export function EventManager({ weddingId, events: initialEvents }: Props) {
+   async function handleMoveDown(index: number) {
+     if (index >= events.length - 1) return;
+     const newEvents = [...events];
+-    [newEvents[index], newEvents[index + 1]] = [newEvents[index + 1], newEvents[index]];
++    const tmp = newEvents[index]!;
++    newEvents[index] = newEvents[index + 1]!;
++    newEvents[index + 1] = tmp;
+     setEvents(newEvents);
+     startTransition(async () => {
+       await reorderEventsAction(weddingId, newEvents.map((e) => e.id));
+diff --git a/src/app/admin/weddings/[id]/guests/GuestManager.tsx b/src/app/admin/weddings/[id]/guests/GuestManager.tsx
+new file mode 100644
+index 0000000..dbe85a8
+--- /dev/null
++++ b/src/app/admin/weddings/[id]/guests/GuestManager.tsx
+@@ -0,0 +1,260 @@
++"use client";
++
++import { useState, useTransition } from "react";
++import {
++  createGuestAction,
++  updateGuestAction,
++  deleteGuestAction,
++} from "@/features/weddings/guest.actions";
++
++type Guest = {
++  id: string;
++  fullName: string;
++  phone: string | null;
++  invitationCode: string;
++  maximumPeople: number;
++  personalizedMessage: string | null;
++  _count: { rsvps: number };
++};
++
++type Props = {
++  weddingId: string;
++  slug: string;
++  guests: Guest[];
++};
++
++export function GuestManager({ weddingId, slug, guests }: Props) {
++  const [editing, setEditing] = useState<string | null>(null);
++  const [showNew, setShowNew] = useState(false);
++  const [isPending, startTransition] = useTransition();
++  const [message, setMessage] = useState("");
++  const [copied, setCopied] = useState<string | null>(null);
++
++  const origin = typeof window !== "undefined" ? window.location.origin : "";
++
++  function guestLink(code: string) {
++    return `${origin}/w/${slug}?guest=${code}`;
++  }
++
++  async function handleCreate(formData: FormData) {
++    startTransition(async () => {
++      const result = await createGuestAction(weddingId, null, formData);
++      if (result.success) {
++        setShowNew(false);
++        setMessage(`Đã tạo khách mời (mã ${result.invitationCode})`);
++        window.location.reload();
++      } else {
++        setMessage(result.error);
++      }
++    });
++  }
++
++  async function handleUpdate(guestId: string, formData: FormData) {
++    startTransition(async () => {
++      const result = await updateGuestAction(weddingId, guestId, null, formData);
++      if (result.success) {
++        setEditing(null);
++        setMessage("Đã cập nhật");
++        window.location.reload();
++      } else {
++        setMessage(result.error);
++      }
++    });
++  }
++
++  async function handleDelete(guestId: string) {
++    if (!confirm("Xóa khách mời này? (RSVP đã gửi vẫn được giữ lại)")) return;
++    startTransition(async () => {
++      const result = await deleteGuestAction(weddingId, guestId);
++      if (result.success) {
++        setMessage("Đã xóa");
++        window.location.reload();
++      } else {
++        setMessage(result.error);
++      }
++    });
++  }
++
++  async function copyLink(code: string) {
++    try {
++      await navigator.clipboard.writeText(guestLink(code));
++      setCopied(code);
++      setTimeout(() => setCopied(null), 1500);
++    } catch {
++      setMessage("Không sao chép được, hãy copy thủ công");
++    }
++  }
++
++  return (
++    <div className="space-y-4">
++      {message && (
++        <div className="rounded-lg bg-blue-50 px-4 py-2 text-sm text-blue-700">{message}</div>
++      )}
++
++      <div className="flex items-center justify-between">
++        <p className="text-sm text-gray-500">
++          Tổng: <strong>{guests.length}</strong> khách mời
++        </p>
++      </div>
++
++      {guests.length === 0 && !showNew && (
++        <p className="text-gray-500">Chưa có khách mời nào.</p>
++      )}
++
++      {guests.map((guest) => (
++        <div key={guest.id} className="rounded-lg border bg-white p-4 shadow-sm">
++          {editing === guest.id ? (
++            <GuestForm
++              guest={guest}
++              onSubmit={(fd) => handleUpdate(guest.id, fd)}
++              onCancel={() => setEditing(null)}
++              isPending={isPending}
++            />
++          ) : (
++            <div className="flex items-start justify-between gap-3">
++              <div className="min-w-0">
++                <h4 className="font-semibold text-gray-800">{guest.fullName}</h4>
++                <p className="text-sm text-gray-500">
++                  {guest.phone || "—"} · tối đa {guest.maximumPeople} người ·{" "}
++                  {guest._count.rsvps > 0 ? (
++                    <span className="text-green-600">đã RSVP</span>
++                  ) : (
++                    <span className="text-gray-400">chưa RSVP</span>
++                  )}
++                </p>
++                <div className="mt-1 flex flex-wrap items-center gap-2">
++                  <code className="rounded bg-gray-100 px-2 py-0.5 text-xs font-mono">
++                    {guest.invitationCode}
++                  </code>
++                  <button
++                    onClick={() => copyLink(guest.invitationCode)}
++                    className="rounded px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-50"
++                  >
++                    {copied === guest.invitationCode ? "✓ Đã copy link" : "Copy link mời"}
++                  </button>
++                </div>
++              </div>
++              <div className="flex shrink-0 gap-1">
++                <button
++                  onClick={() => setEditing(guest.id)}
++                  className="rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
++                >
++                  Sửa
++                </button>
++                <button
++                  onClick={() => handleDelete(guest.id)}
++                  disabled={isPending}
++                  className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
++                >
++                  Xóa
++                </button>
++              </div>
++            </div>
++          )}
++        </div>
++      ))}
++
++      {showNew ? (
++        <div className="rounded-lg border-2 border-dashed border-blue-300 bg-blue-50/50 p-4">
++          <h4 className="mb-3 font-semibold text-gray-700">Thêm khách mời</h4>
++          <GuestForm
++            onSubmit={handleCreate}
++            onCancel={() => setShowNew(false)}
++            isPending={isPending}
++          />
++        </div>
++      ) : (
++        <button
++          onClick={() => setShowNew(true)}
++          className="w-full rounded-lg border-2 border-dashed border-gray-300 py-3 text-sm font-medium text-gray-500 hover:border-blue-400 hover:text-blue-600"
++        >
++          + Thêm khách mời
++        </button>
++      )}
++    </div>
++  );
++}
++
++function GuestForm({
++  guest,
++  onSubmit,
++  onCancel,
++  isPending,
++}: {
++  guest?: Guest;
++  onSubmit: (fd: FormData) => void;
++  onCancel: () => void;
++  isPending: boolean;
++}) {
++  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
++    e.preventDefault();
++    onSubmit(new FormData(e.currentTarget));
++  }
++
++  return (
++    <form onSubmit={handleSubmit} className="space-y-3">
++      <div>
++        <label className="block text-sm font-medium text-gray-700">Họ tên *</label>
++        <input
++          name="fullName"
++          defaultValue={guest?.fullName}
++          required
++          minLength={2}
++          maxLength={100}
++          className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
++          placeholder="VD: Anh Nguyễn Văn A"
++        />
++      </div>
++      <div className="grid grid-cols-2 gap-3">
++        <div>
++          <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
++          <input
++            name="phone"
++            defaultValue={guest?.phone ?? ""}
++            maxLength={20}
++            className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
++          />
++        </div>
++        <div>
++          <label className="block text-sm font-medium text-gray-700">Số người tối đa *</label>
++          <input
++            name="maximumPeople"
++            type="number"
++            min={1}
++            max={20}
++            defaultValue={guest?.maximumPeople ?? 1}
++            required
++            className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
++          />
++        </div>
++      </div>
++      <div>
++        <label className="block text-sm font-medium text-gray-700">Lời nhắn riêng</label>
++        <textarea
++          name="personalizedMessage"
++          defaultValue={guest?.personalizedMessage ?? ""}
++          rows={2}
++          maxLength={500}
++          className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
++          placeholder="Hiển thị riêng cho khách này khi mở link mời"
++        />
++      </div>
++      <div className="flex gap-2">
++        <button
++          type="submit"
++          disabled={isPending}
++          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
++        >
++          {isPending ? "Đang lưu..." : guest ? "Cập nhật" : "Tạo & sinh mã"}
++        </button>
++        <button
++          type="button"
++          onClick={onCancel}
++          className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200"
++        >
++          Hủy
++        </button>
++      </div>
++    </form>
++  );
++}
+diff --git a/src/app/admin/weddings/[id]/guests/page.tsx b/src/app/admin/weddings/[id]/guests/page.tsx
+new file mode 100644
+index 0000000..bc1a8aa
+--- /dev/null
++++ b/src/app/admin/weddings/[id]/guests/page.tsx
+@@ -0,0 +1,47 @@
++import { notFound } from "next/navigation";
++import { requireAdminSession } from "@/lib/auth/require-admin";
++import { db } from "@/lib/db";
++import { GuestManager } from "./GuestManager";
++
++type Params = { params: { id: string } };
++
++export default async function GuestsPage({ params }: Params) {
++  await requireAdminSession();
++
++  const wedding = await db.wedding.findUnique({
++    where: { id: params.id },
++    select: {
++      id: true,
++      slug: true,
++      groomName: true,
++      brideName: true,
++      guests: {
++        orderBy: { fullName: "asc" },
++        select: {
++          id: true,
++          fullName: true,
++          phone: true,
++          invitationCode: true,
++          maximumPeople: true,
++          personalizedMessage: true,
++          _count: { select: { rsvps: true } },
++        },
++      },
++    },
++  });
++  if (!wedding) notFound();
++
++  return (
++    <div>
++      <h2 className="mb-1 text-xl font-bold text-gray-800">
++        Khách mời — {wedding.groomName} &amp; {wedding.brideName}
++      </h2>
++      <p className="mb-6 text-sm text-gray-500">
++        Mỗi khách có mã mời riêng. Chia sẻ link{" "}
++        <code className="rounded bg-gray-100 px-1">/w/{wedding.slug}?guest=MÃ</code> để tự điền tên
++        và giới hạn số người.
++      </p>
++      <GuestManager weddingId={wedding.id} slug={wedding.slug} guests={wedding.guests} />
++    </div>
++  );
++}
+diff --git a/src/app/admin/weddings/[id]/layout.tsx b/src/app/admin/weddings/[id]/layout.tsx
+index 7057676..0e2981c 100644
+--- a/src/app/admin/weddings/[id]/layout.tsx
++++ b/src/app/admin/weddings/[id]/layout.tsx
+@@ -8,6 +8,7 @@ const tabs = [
+   { href: "content", label: "Nội dung" },
+   { href: "events", label: "Sự kiện" },
+   { href: "gallery", label: "Album" },
++  { href: "guests", label: "Khách mời" },
+   { href: "rsvps", label: "RSVP" },
+   { href: "wishes", label: "Lời chúc" },
+   { href: "publish", label: "Xuất bản" },
+diff --git a/src/app/api/public/weddings/[slug]/rsvp/route.ts b/src/app/api/public/weddings/[slug]/rsvp/route.ts
+index 833d6aa..4a9fcac 100644
+--- a/src/app/api/public/weddings/[slug]/rsvp/route.ts
++++ b/src/app/api/public/weddings/[slug]/rsvp/route.ts
+@@ -37,7 +37,28 @@ export async function POST(
+     );
+   }
+ 
+-  const { fullName, phone, attendance, numberOfPeople, message } = parsed.data;
++  const { fullName, phone, attendance, numberOfPeople, message, invitationCode } =
++    parsed.data;
++
++  // GUEST-03/04: Nếu có mã mời hợp lệ → liên kết guest & giới hạn số người.
++  let guestId: string | null = null;
++  if (invitationCode) {
++    const guest = await db.guest.findFirst({
++      where: { weddingId: wedding.id, invitationCode: invitationCode.toUpperCase() },
++      select: { id: true, maximumPeople: true },
++    });
++    if (guest) {
++      guestId = guest.id;
++      if (numberOfPeople > guest.maximumPeople) {
++        return NextResponse.json(
++          {
++            error: `Số người vượt quá giới hạn cho phép (tối đa ${guest.maximumPeople})`,
++          },
++          { status: 400 },
++        );
++      }
++    }
++  }
+ 
+   // Hash IP
+   const env = getEnv();
+@@ -67,6 +88,7 @@ export async function POST(
+       numberOfPeople,
+       message: message || null,
+       ipHash,
++      guestId,
+     },
+     create: {
+       weddingId: wedding.id,
+@@ -77,6 +99,7 @@ export async function POST(
+       message: message || null,
+       submissionKey,
+       ipHash,
++      guestId,
+     },
+   });
+ 
+diff --git a/src/app/w/[slug]/page.tsx b/src/app/w/[slug]/page.tsx
+index d4c6f6c..9ce88c8 100644
+--- a/src/app/w/[slug]/page.tsx
++++ b/src/app/w/[slug]/page.tsx
+@@ -1,6 +1,7 @@
+ import type { Metadata } from "next";
+ import { notFound } from "next/navigation";
+ import { findPublishedWeddingBySlug } from "@/features/weddings/wedding.repository";
++import { db } from "@/lib/db";
+ import { toPublicWeddingDto } from "@/features/weddings/public-dto";
+ import { Countdown } from "@/components/wedding/Countdown";
+ import {
+@@ -19,7 +20,10 @@ import { MusicPlayer } from "@/components/wedding/MusicPlayer";
+ 
+ export const dynamic = "force-dynamic";
+ 
+-type Params = { params: { slug: string } };
++type Params = {
++  params: { slug: string };
++  searchParams: { guest?: string };
++};
+ 
+ export async function generateMetadata({ params }: Params): Promise<Metadata> {
+   const w = await findPublishedWeddingBySlug(params.slug);
+@@ -32,13 +36,22 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
+   };
+ }
+ 
+-export default async function WeddingPage({ params }: Params) {
++export default async function WeddingPage({ params, searchParams }: Params) {
+   const wedding = await findPublishedWeddingBySlug(params.slug);
+   // Chỉ thiệp PUBLISHED mới hiển thị; DRAFT/ARCHIVED → 404.
+   if (!wedding) notFound();
+ 
+   const dto = toPublicWeddingDto(wedding);
+ 
++  // GUEST-03: nếu có ?guest=code, tra cứu khách mời để tự điền tên & giới hạn số người.
++  const guestCode = searchParams.guest?.trim().toUpperCase();
++  const guest = guestCode
++    ? await db.guest.findFirst({
++        where: { weddingId: wedding.id, invitationCode: guestCode },
++        select: { fullName: true, maximumPeople: true, invitationCode: true, personalizedMessage: true },
++      })
++    : null;
++
+   return (
+     <main className="mx-auto min-h-screen max-w-[640px] bg-paper">
+       <WeddingHero dto={dto} />
+@@ -69,7 +82,17 @@ export default async function WeddingPage({ params }: Params) {
+ 
+       {dto.visibility.rsvp && (
+         <SectionShell kick="Xác nhận tham dự" title="RSVP">
+-          <RsvpForm slug={params.slug} />
++          {guest?.personalizedMessage && (
++            <p className="mx-auto mb-4 max-w-md text-center font-cormorant text-[1.15rem] text-gold-deep">
++              {guest.personalizedMessage}
++            </p>
++          )}
++          <RsvpForm
++            slug={params.slug}
++            presetName={guest?.fullName}
++            invitationCode={guest?.invitationCode}
++            maxPeople={guest?.maximumPeople}
++          />
+         </SectionShell>
+       )}
+ 
+diff --git a/src/components/wedding/RsvpForm.tsx b/src/components/wedding/RsvpForm.tsx
+index 2b5a6f0..da9b974 100644
+--- a/src/components/wedding/RsvpForm.tsx
++++ b/src/components/wedding/RsvpForm.tsx
+@@ -3,14 +3,22 @@
+ import { useState } from "react";
+ import type { RsvpSubmissionInput } from "@/features/weddings/rsvp.schemas";
+ 
+-type Props = { slug: string };
++type Props = {
++  slug: string;
++  /** GUEST-03: tên gợi sẵn từ mã mời cá nhân */
++  presetName?: string;
++  /** GUEST-03: mã mời để liên kết RSVP với Guest */
++  invitationCode?: string;
++  /** GUEST-04: giới hạn số người (mặc định 20) */
++  maxPeople?: number;
++};
+ type Status = "idle" | "loading" | "success" | "error";
+ 
+-export function RsvpForm({ slug }: Props) {
++export function RsvpForm({ slug, presetName, invitationCode, maxPeople = 20 }: Props) {
+   const [status, setStatus] = useState<Status>("idle");
+   const [errorMsg, setErrorMsg] = useState("");
+ 
+-  const [fullName, setFullName] = useState("");
++  const [fullName, setFullName] = useState(presetName ?? "");
+   const [phone, setPhone] = useState("");
+   const [attendance, setAttendance] = useState<RsvpSubmissionInput["attendance"]>("ATTENDING");
+   const [numberOfPeople, setNumberOfPeople] = useState(1);
+@@ -25,7 +33,14 @@ export function RsvpForm({ slug }: Props) {
+       const res = await fetch(`/api/public/weddings/${slug}/rsvp`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+-        body: JSON.stringify({ fullName, phone, attendance, numberOfPeople, message }),
++        body: JSON.stringify({
++          fullName,
++          phone,
++          attendance,
++          numberOfPeople,
++          message,
++          invitationCode,
++        }),
+       });
+       if (!res.ok) {
+         const data = await res.json().catch(() => null);
+@@ -101,11 +116,14 @@ export function RsvpForm({ slug }: Props) {
+           <input
+             type="number"
+             min={1}
+-            max={20}
++            max={maxPeople}
+             value={numberOfPeople}
+             onChange={(e) => setNumberOfPeople(Number(e.target.value))}
+             className="w-full rounded-lg border border-gold-soft/50 px-3 py-2 text-base outline-none focus:border-gold focus:ring-1 focus:ring-gold"
+           />
++          {maxPeople < 20 && (
++            <p className="mt-1 text-xs text-muted">Tối đa {maxPeople} người theo thư mời của bạn.</p>
++          )}
+         </div>
+       )}
+ 
+diff --git a/src/features/weddings/guest.actions.ts b/src/features/weddings/guest.actions.ts
+new file mode 100644
+index 0000000..7049cd9
+--- /dev/null
++++ b/src/features/weddings/guest.actions.ts
+@@ -0,0 +1,142 @@
++"use server";
++
++import { revalidatePath } from "next/cache";
++import { requireAdminSession } from "@/lib/auth/require-admin";
++import { db } from "@/lib/db";
++import {
++  createGuestSchema,
++  updateGuestSchema,
++  generateInvitationCode,
++} from "./guest.schemas";
++
++type ActionResult =
++  | { success: true; id?: string; invitationCode?: string }
++  | { success: false; error: string; fieldErrors?: Record<string, string[]> };
++
++// ─── Sinh invitationCode duy nhất ───────────────────────────────────
++
++async function generateUniqueCode(): Promise<string> {
++  // Thử tối đa 10 lần để tránh trùng (unique constraint DB là chốt chặn cuối).
++  for (let i = 0; i < 10; i++) {
++    const code = generateInvitationCode();
++    const existing = await db.guest.findUnique({
++      where: { invitationCode: code },
++      select: { id: true },
++    });
++    if (!existing) return code;
++  }
++  throw new Error("Không sinh được mã mời duy nhất, vui lòng thử lại");
++}
++
++// ─── Create Guest (GUEST-01, GUEST-02) ──────────────────────────────
++
++export async function createGuestAction(
++  weddingId: string,
++  _prev: ActionResult | null,
++  formData: FormData,
++): Promise<ActionResult> {
++  await requireAdminSession();
++
++  const wedding = await db.wedding.findUnique({
++    where: { id: weddingId },
++    select: { id: true },
++  });
++  if (!wedding) return { success: false, error: "Không tìm thấy thiệp" };
++
++  const parsed = createGuestSchema.safeParse({
++    fullName: formData.get("fullName"),
++    phone: formData.get("phone") || undefined,
++    maximumPeople: formData.get("maximumPeople") ?? 1,
++    personalizedMessage: formData.get("personalizedMessage") || undefined,
++  });
++
++  if (!parsed.success) {
++    return {
++      success: false,
++      error: "Dữ liệu không hợp lệ",
++      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
++    };
++  }
++
++  const invitationCode = await generateUniqueCode();
++
++  const guest = await db.guest.create({
++    data: {
++      weddingId,
++      fullName: parsed.data.fullName,
++      phone: parsed.data.phone || null,
++      maximumPeople: parsed.data.maximumPeople,
++      personalizedMessage: parsed.data.personalizedMessage || null,
++      invitationCode,
++    },
++  });
++
++  revalidatePath(`/admin/weddings/${weddingId}/guests`);
++  return { success: true, id: guest.id, invitationCode };
++}
++
++// ─── Update Guest (GUEST-01) ────────────────────────────────────────
++
++export async function updateGuestAction(
++  weddingId: string,
++  guestId: string,
++  _prev: ActionResult | null,
++  formData: FormData,
++): Promise<ActionResult> {
++  await requireAdminSession();
++
++  const existing = await db.guest.findFirst({
++    where: { id: guestId, weddingId },
++    select: { id: true },
++  });
++  if (!existing) return { success: false, error: "Không tìm thấy khách mời" };
++
++  const parsed = updateGuestSchema.safeParse({
++    fullName: formData.get("fullName"),
++    phone: formData.get("phone") || undefined,
++    maximumPeople: formData.get("maximumPeople") ?? 1,
++    personalizedMessage: formData.get("personalizedMessage") || undefined,
++  });
++
++  if (!parsed.success) {
++    return {
++      success: false,
++      error: "Dữ liệu không hợp lệ",
++      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
++    };
++  }
++
++  await db.guest.update({
++    where: { id: guestId },
++    data: {
++      fullName: parsed.data.fullName,
++      phone: parsed.data.phone || null,
++      maximumPeople: parsed.data.maximumPeople,
++      personalizedMessage: parsed.data.personalizedMessage || null,
++    },
++  });
++
++  revalidatePath(`/admin/weddings/${weddingId}/guests`);
++  return { success: true, id: guestId };
++}
++
++// ─── Delete Guest (GUEST-01) ────────────────────────────────────────
++
++export async function deleteGuestAction(
++  weddingId: string,
++  guestId: string,
++): Promise<ActionResult> {
++  await requireAdminSession();
++
++  const existing = await db.guest.findFirst({
++    where: { id: guestId, weddingId },
++    select: { id: true },
++  });
++  if (!existing) return { success: false, error: "Không tìm thấy khách mời" };
++
++  // Rsvp.guestId dùng onDelete: SetNull → RSVP đã gửi vẫn giữ lại.
++  await db.guest.delete({ where: { id: guestId } });
++
++  revalidatePath(`/admin/weddings/${weddingId}/guests`);
++  return { success: true };
++}
+diff --git a/src/features/weddings/guest.schemas.test.ts b/src/features/weddings/guest.schemas.test.ts
+new file mode 100644
+index 0000000..218f1f0
+--- /dev/null
++++ b/src/features/weddings/guest.schemas.test.ts
+@@ -0,0 +1,51 @@
++import { describe, it, expect } from "vitest";
++import { createGuestSchema, generateInvitationCode } from "./guest.schemas";
++
++describe("createGuestSchema", () => {
++  const valid = { fullName: "Nguyễn Văn A", maximumPeople: 2 };
++
++  it("accepts valid input", () => {
++    expect(createGuestSchema.safeParse(valid).success).toBe(true);
++  });
++
++  it("defaults maximumPeople to 1 when omitted", () => {
++    const result = createGuestSchema.safeParse({ fullName: "Trần Thị B" });
++    expect(result.success).toBe(true);
++    if (result.success) expect(result.data.maximumPeople).toBe(1);
++  });
++
++  it("rejects name shorter than 2 chars", () => {
++    expect(createGuestSchema.safeParse({ ...valid, fullName: "A" }).success).toBe(false);
++  });
++
++  it("rejects maximumPeople < 1", () => {
++    expect(createGuestSchema.safeParse({ ...valid, maximumPeople: 0 }).success).toBe(false);
++  });
++
++  it("rejects maximumPeople > 20", () => {
++    expect(createGuestSchema.safeParse({ ...valid, maximumPeople: 21 }).success).toBe(false);
++  });
++
++  it("coerces numeric string for maximumPeople", () => {
++    const result = createGuestSchema.safeParse({ ...valid, maximumPeople: "3" });
++    expect(result.success).toBe(true);
++    if (result.success) expect(result.data.maximumPeople).toBe(3);
++  });
++});
++
++describe("generateInvitationCode", () => {
++  it("generates code of requested length", () => {
++    expect(generateInvitationCode(8)).toHaveLength(8);
++  });
++
++  it("uses only unambiguous alphabet (no 0/O/1/I/L)", () => {
++    for (let i = 0; i < 50; i++) {
++      expect(generateInvitationCode()).toMatch(/^[A-HJ-NP-Z2-9]+$/);
++    }
++  });
++
++  it("produces different codes across calls", () => {
++    const codes = new Set(Array.from({ length: 100 }, () => generateInvitationCode()));
++    expect(codes.size).toBeGreaterThan(90);
++  });
++});
+diff --git a/src/features/weddings/guest.schemas.ts b/src/features/weddings/guest.schemas.ts
+new file mode 100644
+index 0000000..598727b
+--- /dev/null
++++ b/src/features/weddings/guest.schemas.ts
+@@ -0,0 +1,51 @@
++import { z } from "zod";
++
++/**
++ * GUEST-01: Zod schema cho Guest (khách mời cá nhân).
++ * GUEST-02: invitationCode sinh tự động phía server (không nhập tay).
++ * GUEST-04: maximumPeople giới hạn số người khi RSVP.
++ */
++export const createGuestSchema = z.object({
++  fullName: z
++    .string()
++    .trim()
++    .min(2, "Tên tối thiểu 2 ký tự")
++    .max(100, "Tên tối đa 100 ký tự"),
++  phone: z
++    .string()
++    .trim()
++    .max(20, "Số điện thoại tối đa 20 ký tự")
++    .optional()
++    .or(z.literal("")),
++  maximumPeople: z.coerce
++    .number()
++    .int("Phải là số nguyên")
++    .min(1, "Tối thiểu 1 người")
++    .max(20, "Tối đa 20 người")
++    .default(1),
++  personalizedMessage: z
++    .string()
++    .trim()
++    .max(500, "Lời nhắn tối đa 500 ký tự")
++    .optional()
++    .or(z.literal("")),
++});
++
++export type CreateGuestInput = z.infer<typeof createGuestSchema>;
++
++export const updateGuestSchema = createGuestSchema;
++export type UpdateGuestInput = z.infer<typeof updateGuestSchema>;
++
++/**
++ * GUEST-02: Sinh invitationCode ngẫu nhiên, dễ đọc (bỏ ký tự dễ nhầm 0/O/1/I/L).
++ * 8 ký tự → không phân biệt hoa thường khi tra cứu (chuẩn hoá upper).
++ */
++const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
++
++export function generateInvitationCode(length = 8): string {
++  let out = "";
++  for (let i = 0; i < length; i++) {
++    out += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
++  }
++  return out;
++}
+diff --git a/src/features/weddings/rsvp.schemas.ts b/src/features/weddings/rsvp.schemas.ts
+index 58a37f3..47880a8 100644
+--- a/src/features/weddings/rsvp.schemas.ts
++++ b/src/features/weddings/rsvp.schemas.ts
+@@ -19,6 +19,13 @@ export const rsvpSubmissionSchema = z
+       .max(20, "Số điện thoại tối đa 20 ký tự")
+       .optional()
+       .or(z.literal("")),
++    // GUEST-03: mã mời cá nhân (tuỳ chọn) để liên kết RSVP với Guest.
++    invitationCode: z
++      .string()
++      .trim()
++      .max(32)
++      .optional()
++      .or(z.literal("")),
+     attendance: attendanceStatusSchema,
+     numberOfPeople: z
+       .number()
+-- 
+2.39.5
+
