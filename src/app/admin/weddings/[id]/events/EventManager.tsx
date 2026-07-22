@@ -64,7 +64,9 @@ export function EventManager({ weddingId, events: initialEvents }: Props) {
   async function handleMoveUp(index: number) {
     if (index === 0) return;
     const newEvents = [...events];
-    [newEvents[index - 1], newEvents[index]] = [newEvents[index], newEvents[index - 1]];
+    const tmp = newEvents[index - 1]!;
+    newEvents[index - 1] = newEvents[index]!;
+    newEvents[index] = tmp;
     setEvents(newEvents);
     startTransition(async () => {
       await reorderEventsAction(weddingId, newEvents.map((e) => e.id));
@@ -74,7 +76,9 @@ export function EventManager({ weddingId, events: initialEvents }: Props) {
   async function handleMoveDown(index: number) {
     if (index >= events.length - 1) return;
     const newEvents = [...events];
-    [newEvents[index], newEvents[index + 1]] = [newEvents[index + 1], newEvents[index]];
+    const tmp = newEvents[index]!;
+    newEvents[index] = newEvents[index + 1]!;
+    newEvents[index + 1] = tmp;
     setEvents(newEvents);
     startTransition(async () => {
       await reorderEventsAction(weddingId, newEvents.map((e) => e.id));

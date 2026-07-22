@@ -150,14 +150,14 @@
 
 ---
 
-## GUEST — Khách mời cá nhân (Giai đoạn 7)  ⬜
+## GUEST — Khách mời cá nhân (Giai đoạn 7)  ✅
 
 | Mã | Việc | TT |
 |----|------|----|
-| GUEST-01 | CRUD Guest | ⬜ |
-| GUEST-02 | Sinh invitationCode ngẫu nhiên (unique) | ⬜ |
-| GUEST-03 | Link `?guest=code` tự điền tên | ⬜ |
-| GUEST-04 | Giới hạn numberOfPeople theo maximumPeople của Guest | ⬜ |
+| GUEST-01 | CRUD Guest | ✅ |
+| GUEST-02 | Sinh invitationCode ngẫu nhiên (unique) | ✅ |
+| GUEST-03 | Link `?guest=code` tự điền tên | ✅ |
+| GUEST-04 | Giới hạn numberOfPeople theo maximumPeople của Guest | ✅ |
 
 ---
 
@@ -207,7 +207,7 @@
 | TPL Template | 7 | 7 | 100% |
 | MED Media | 7 | 7 | 100% |
 | RSVP | 8 | 8 | 100% |
-| GUEST | 0 | 4 | 0% |
+| GUEST | 4 | 4 | 100% |
 | UTIL | 0 | 6 | 0% |
 | TEST | 4 | 8 | 50% |
-| **Tổng** | **73** | **87** | **84%** |
+| **Tổng** | **77** | **87** | **89%** |

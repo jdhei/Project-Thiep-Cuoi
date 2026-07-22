@@ -19,6 +19,13 @@ export const rsvpSubmissionSchema = z
       .max(20, "Số điện thoại tối đa 20 ký tự")
       .optional()
       .or(z.literal("")),
+    // GUEST-03: mã mời cá nhân (tuỳ chọn) để liên kết RSVP với Guest.
+    invitationCode: z
+      .string()
+      .trim()
+      .max(32)
+      .optional()
+      .or(z.literal("")),
     attendance: attendanceStatusSchema,
     numberOfPeople: z
       .number()

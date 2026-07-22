@@ -77,7 +77,7 @@ npm run dev
 - `docs/TASKS-status.md` — Tiến độ công việc chi tiết
 - `docs/DECISIONS.md` — Quyết định kiến trúc (ADR)
 
-## Tiến độ (84%)
+## Tiến độ (89%)
 - ✅ Prototype UI/UX, Setup, Database, Deploy (Vercel + Supabase)
 - ✅ Admin Auth (login/logout/session/rate-limit/E2E)
 - ✅ Wedding CRUD (danh sách/tạo/sửa/archive/preview/publish)
@@ -85,4 +85,5 @@ npm run dev
 - ✅ Template Public (visibility check, gallery, RSVP, gift, responsive)
 - ✅ Events & Media (CRUD sự kiện, upload, gallery, music player)
 - ✅ RSVP & Wishes (form khách, idempotent, hash IP, duyệt lời chúc)
-- ⬜ Guest (khách mời cá nhân) → Hoàn thiện (export/QR/OG/security)
+- ✅ Guest (khách mời cá nhân — CRUD, mã mời, link ?guest=, giới hạn số người)
+- ⬜ Hoàn thiện (export CSV/QR/OG/security)

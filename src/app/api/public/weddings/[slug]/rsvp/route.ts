@@ -37,7 +37,28 @@ export async function POST(
     );
   }
 
-  const { fullName, phone, attendance, numberOfPeople, message } = parsed.data;
+  const { fullName, phone, attendance, numberOfPeople, message, invitationCode } =
+    parsed.data;
+
+  // GUEST-03/04: Nếu có mã mời hợp lệ → liên kết guest & giới hạn số người.
+  let guestId: string | null = null;
+  if (invitationCode) {
+    const guest = await db.guest.findFirst({
+      where: { weddingId: wedding.id, invitationCode: invitationCode.toUpperCase() },
+      select: { id: true, maximumPeople: true },
+    });
+    if (guest) {
+      guestId = guest.id;
+      if (numberOfPeople > guest.maximumPeople) {
+        return NextResponse.json(
+          {
+            error: `Số người vượt quá giới hạn cho phép (tối đa ${guest.maximumPeople})`,
+          },
+          { status: 400 },
+        );
+      }
+    }
+  }
 
   // Hash IP
   const env = getEnv();
@@ -67,6 +88,7 @@ export async function POST(
       numberOfPeople,
       message: message || null,
       ipHash,
+      guestId,
     },
     create: {
       weddingId: wedding.id,
@@ -77,6 +99,7 @@ export async function POST(
       message: message || null,
       submissionKey,
       ipHash,
+      guestId,
     },
   });
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { findPublishedWeddingBySlug } from "@/features/weddings/wedding.repository";
+import { db } from "@/lib/db";
 import { toPublicWeddingDto } from "@/features/weddings/public-dto";
 import { Countdown } from "@/components/wedding/Countdown";
 import {
@@ -19,7 +20,10 @@ import { MusicPlayer } from "@/components/wedding/MusicPlayer";
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: { slug: string } };
+type Params = {
+  params: { slug: string };
+  searchParams: { guest?: string };
+};
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const w = await findPublishedWeddingBySlug(params.slug);
@@ -32,12 +36,21 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
-export default async function WeddingPage({ params }: Params) {
+export default async function WeddingPage({ params, searchParams }: Params) {
   const wedding = await findPublishedWeddingBySlug(params.slug);
   // Chỉ thiệp PUBLISHED mới hiển thị; DRAFT/ARCHIVED → 404.
   if (!wedding) notFound();
 
   const dto = toPublicWeddingDto(wedding);
+
+  // GUEST-03: nếu có ?guest=code, tra cứu khách mời để tự điền tên & giới hạn số người.
+  const guestCode = searchParams.guest?.trim().toUpperCase();
+  const guest = guestCode
+    ? await db.guest.findFirst({
+        where: { weddingId: wedding.id, invitationCode: guestCode },
+        select: { fullName: true, maximumPeople: true, invitationCode: true, personalizedMessage: true },
+      })
+    : null;
 
   return (
     <main className="mx-auto min-h-screen max-w-[640px] bg-paper">
@@ -69,7 +82,17 @@ export default async function WeddingPage({ params }: Params) {
 
       {dto.visibility.rsvp && (
         <SectionShell kick="Xác nhận tham dự" title="RSVP">
-          <RsvpForm slug={params.slug} />
+          {guest?.personalizedMessage && (
+            <p className="mx-auto mb-4 max-w-md text-center font-cormorant text-[1.15rem] text-gold-deep">
+              {guest.personalizedMessage}
+            </p>
+          )}
+          <RsvpForm
+            slug={params.slug}
+            presetName={guest?.fullName}
+            invitationCode={guest?.invitationCode}
+            maxPeople={guest?.maximumPeople}
+          />
         </SectionShell>
       )}
 

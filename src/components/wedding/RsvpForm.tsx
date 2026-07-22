@@ -3,14 +3,22 @@
 import { useState } from "react";
 import type { RsvpSubmissionInput } from "@/features/weddings/rsvp.schemas";
 
-type Props = { slug: string };
+type Props = {
+  slug: string;
+  /** GUEST-03: tên gợi sẵn từ mã mời cá nhân */
+  presetName?: string;
+  /** GUEST-03: mã mời để liên kết RSVP với Guest */
+  invitationCode?: string;
+  /** GUEST-04: giới hạn số người (mặc định 20) */
+  maxPeople?: number;
+};
 type Status = "idle" | "loading" | "success" | "error";
 
-export function RsvpForm({ slug }: Props) {
+export function RsvpForm({ slug, presetName, invitationCode, maxPeople = 20 }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const [fullName, setFullName] = useState("");
+  const [fullName, setFullName] = useState(presetName ?? "");
   const [phone, setPhone] = useState("");
   const [attendance, setAttendance] = useState<RsvpSubmissionInput["attendance"]>("ATTENDING");
   const [numberOfPeople, setNumberOfPeople] = useState(1);
@@ -25,7 +33,14 @@ export function RsvpForm({ slug }: Props) {
       const res = await fetch(`/api/public/weddings/${slug}/rsvp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, phone, attendance, numberOfPeople, message }),
+        body: JSON.stringify({
+          fullName,
+          phone,
+          attendance,
+          numberOfPeople,
+          message,
+          invitationCode,
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
@@ -101,11 +116,14 @@ export function RsvpForm({ slug }: Props) {
           <input
             type="number"
             min={1}
-            max={20}
+            max={maxPeople}
             value={numberOfPeople}
             onChange={(e) => setNumberOfPeople(Number(e.target.value))}
             className="w-full rounded-lg border border-gold-soft/50 px-3 py-2 text-base outline-none focus:border-gold focus:ring-1 focus:ring-gold"
           />
+          {maxPeople < 20 && (
+            <p className="mt-1 text-xs text-muted">Tối đa {maxPeople} người theo thư mời của bạn.</p>
+          )}
         </div>
       )}
 

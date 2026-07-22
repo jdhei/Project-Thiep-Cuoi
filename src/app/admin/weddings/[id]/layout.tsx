@@ -8,6 +8,7 @@ const tabs = [
   { href: "content", label: "Nội dung" },
   { href: "events", label: "Sự kiện" },
   { href: "gallery", label: "Album" },
+  { href: "guests", label: "Khách mời" },
   { href: "rsvps", label: "RSVP" },
   { href: "wishes", label: "Lời chúc" },
   { href: "publish", label: "Xuất bản" },
