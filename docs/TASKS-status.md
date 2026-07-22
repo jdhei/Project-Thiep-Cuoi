@@ -91,17 +91,18 @@
 
 ---
 
-## WED — Wedding CRUD (Giai đoạn 3)  ⬜
+## WED — Wedding CRUD (Giai đoạn 3)  ✅
 
 | Mã | Việc | TT |
 |----|------|----|
-| WED-01 | `/admin/weddings` danh sách + trạng thái | ⬜ |
-| WED-02 | `/admin/weddings/new` tạo (groom/bride/slug/date) → DRAFT | ⬜ |
-| WED-03 | Validate slug: không dấu, unique, từ cấm (admin/api/login/preview) | ⬜ |
-| WED-04 | `/admin/weddings/[id]/content` sửa nội dung + cờ show* | ⬜ |
-| WED-05 | Archive (không xoá thật) | ⬜ |
-| WED-06 | `/preview/[id]` xem draft (chỉ admin) | ⬜ |
-| WED-07 | Publish validator: bắt buộc cover + ≥1 event + weddingDate | ⬜ |
+| WED-01 | `/admin/weddings` danh sách + trạng thái | ✅ |
+| WED-02 | `/admin/weddings/new` tạo (groom/bride/slug/date) → DRAFT | ✅ |
+| WED-03 | Validate slug: không dấu, unique, từ cấm (admin/api/login/preview) | ✅ |
+| WED-04 | `/admin/weddings/[id]/content` sửa nội dung + cờ show* | ✅ |
+| WED-05 | Archive (không xoá thật) | ✅ |
+| WED-06 | `/preview/[id]` xem draft (chỉ admin) | ✅ |
+| WED-07 | Publish validator: bắt buộc cover + ≥1 event + weddingDate | ✅ |
+| WED-08 | Cloudflare Zero Trust middleware cho /admin/* và /preview/* | ✅ |
 
 ---
 
@@ -201,11 +202,11 @@
 | DB Database | 11 | 11 | 100% |
 | DEPLOY | 6 | 6 | 100% |
 | AUTH Admin Auth | 8 | 8 | 100% |
-| WED Wedding CRUD | 0 | 7 | 0% |
+| WED Wedding CRUD | 8 | 8 | 100% |
 | TPL Template | 5 | 7 | 71% |
 | MED Media | 0 | 7 | 0% |
 | RSVP | 0 | 8 | 0% |
 | GUEST | 0 | 4 | 0% |
 | UTIL | 0 | 6 | 0% |
 | TEST | 2 | 8 | 25% |
-| **Tổng** | **46** | **86** | **53%** |
+| **Tổng** | **54** | **87** | **62%** |

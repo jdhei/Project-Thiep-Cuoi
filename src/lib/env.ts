@@ -12,6 +12,9 @@ const envSchema = z.object({
   UPLOAD_ROOT: z.string().min(1).default("./storage/uploads"),
   IP_HASH_SECRET: z.string().min(16, "IP_HASH_SECRET phải >= 16 ký tự"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  // Cloudflare Zero Trust (optional — bypass nếu không set)
+  CF_ACCESS_TEAM_NAME: z.string().optional(),
+  CF_ACCESS_AUD: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

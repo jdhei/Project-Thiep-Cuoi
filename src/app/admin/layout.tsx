@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth/session";
+import Link from "next/link";
 
 export const metadata = {
   title: "Admin · Thiệp Ước",
@@ -11,29 +12,37 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Check auth — but let the login page render without auth.
-  // In Next.js App Router, we can't easily read the pathname in a layout,
-  // so we check auth and catch the login page case by wrapping children
-  // in a conditional layout (with/without header).
   const cookieStore = cookies();
   const token = cookieStore.get("admin_session")?.value;
   const session = await verifySession(token);
 
-  // Not authenticated → only allow login page to render (no header/chrome).
+  // Not authenticated → only allow login page to render
   if (!session) {
     return <>{children}</>;
   }
 
-  // Authenticated → full admin shell with header.
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Admin header */}
       <header className="border-b bg-white px-6 py-4 shadow-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <h1 className="text-lg font-semibold text-gray-800">
-            🎀 Thiệp Ước — Admin
-          </h1>
-          <LogoutButton />
+          <div className="flex items-center gap-6">
+            <Link href="/admin" className="text-lg font-semibold text-gray-800">
+              🎀 Thiệp Ước
+            </Link>
+            <nav className="hidden sm:flex items-center gap-4">
+              <Link
+                href="/admin/weddings"
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Thiệp cưới
+              </Link>
+            </nav>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="hidden sm:inline text-sm text-gray-500">{session.email}</span>
+            <LogoutButton />
+          </div>
         </div>
       </header>
 
@@ -43,7 +52,6 @@ export default async function AdminLayout({
   );
 }
 
-// ─── Server Action logout ────────────────────────────────────────────
 function LogoutButton() {
   return (
     <form

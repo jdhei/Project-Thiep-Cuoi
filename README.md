@@ -77,8 +77,10 @@ npm run dev
 - `docs/TASKS-status.md` — Tiến độ công việc chi tiết
 - `docs/DECISIONS.md` — Quyết định kiến trúc (ADR)
 
-## Tiến độ (53%)
+## Tiến độ (62%)
 - ✅ Prototype UI/UX, Setup, Database, Deploy (Vercel + Supabase)
 - ✅ Admin Auth (login/logout/session/rate-limit/E2E)
+- ✅ Wedding CRUD (danh sách/tạo/sửa/archive/preview/publish)
+- ✅ Cloudflare Zero Trust (bảo vệ /admin/* và /preview/*)
 - 🟡 Template Public (5/7 task)
-- ⬜ Wedding CRUD → Media → RSVP → Guest → Hoàn thiện
+- ⬜ Media → RSVP → Guest → Hoàn thiện
