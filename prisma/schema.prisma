@@ -1,0 +1,130 @@
+// Prisma schema — Thiệp Cưới Online
+// Production: Supabase PostgreSQL (ap-southeast-2).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Trạng thái lưu dạng String, validate bằng Zod trong src/lib/domain.ts.
+// Xem docs/DECISIONS.md (ADR-001, ADR-006).
+
+model Wedding {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  status       String        @default("DRAFT") // WeddingStatus: DRAFT | PUBLISHED | ARCHIVED
+  groomName    String
+  brideName    String
+  weddingDate  DateTime?
+  title        String?
+  introduction String?
+  loveStory    String?
+  coverPath    String?
+  musicPath    String?
+  primaryColor String?       @default("#8A6D3B")
+
+  showCountdown Boolean @default(true)
+  showStory     Boolean @default(true)
+  showGallery   Boolean @default(true)
+  showRsvp      Boolean @default(true)
+  showWishes    Boolean @default(true)
+  showGift      Boolean @default(false)
+  showMusic     Boolean @default(true)
+
+  giftData  String?  // JSON-text: cấu trúc thông tin mừng cưới
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events WeddingEvent[]
+  media  WeddingMedia[]
+  guests Guest[]
+  rsvps  Rsvp[]
+  wishes Wish[]
+}
+
+model WeddingEvent {
+  id          String   @id @default(cuid())
+  weddingId   String
+  title       String
+  startsAt    DateTime
+  address     String
+  mapUrl      String?
+  description String?
+  sortOrder   Int      @default(0)
+
+  wedding Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+
+  @@index([weddingId, sortOrder])
+}
+
+model WeddingMedia {
+  id        String   @id @default(cuid())
+  weddingId String
+  type      String // cover | gallery | music | gift
+  path      String
+  mimeType  String
+  sizeBytes Int
+  caption   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  wedding Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+
+  @@unique([weddingId, path])
+  @@index([weddingId, type, sortOrder])
+}
+
+model Guest {
+  id                  String  @id @default(cuid())
+  weddingId           String
+  fullName            String
+  phone               String?
+  invitationCode      String  @unique
+  maximumPeople       Int     @default(1)
+  personalizedMessage String?
+
+  wedding Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  rsvps   Rsvp[]
+
+  @@index([weddingId])
+}
+
+model Rsvp {
+  id             String           @id @default(cuid())
+  weddingId      String
+  guestId        String?
+  fullName       String
+  phone          String?
+  attendance     String           // AttendanceStatus: ATTENDING | NOT_ATTENDING | MAYBE
+  numberOfPeople Int              @default(1)
+  message        String?
+  submissionKey  String
+  ipHash         String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  wedding Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  guest   Guest?  @relation(fields: [guestId], references: [id], onDelete: SetNull)
+
+  @@unique([weddingId, submissionKey])
+  @@index([weddingId, attendance])
+}
+
+model Wish {
+  id        String     @id @default(cuid())
+  weddingId String
+  guestName String
+  content   String
+  status    String     @default("PENDING") // WishStatus: PENDING | APPROVED | HIDDEN
+  ipHash    String?
+  createdAt DateTime   @default(now())
+
+  wedding Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+
+  @@index([weddingId, status, createdAt])
+}
