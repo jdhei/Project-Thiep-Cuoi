@@ -190,7 +190,7 @@
 |----|------|----|
 | TEST-E1 | Luồng admin: login→tạo→publish→xem RSVP | ✅ |
 | TEST-E2 | Luồng khách: mở thiệp→RSVP→lời chúc | ✅ |
-| TEST-M1 | Điện thoại thật (Android Chrome / iPhone Safari), mạng chậm, bàn phím mở form | ⬜ |
+| TEST-M1 | Điện thoại thật (Android Chrome / iPhone Safari), mạng chậm, bàn phím mở form — xem `TEST-M1-mobile-guide.md` | ⬜ |
 
 ---
 
