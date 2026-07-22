@@ -106,7 +106,7 @@
 
 ---
 
-## TPL — Template Public (Giai đoạn 4)  🟡 (5/7)
+## TPL — Template Public (Giai đoạn 4)  ✅
 
 | Mã | Việc | TT |
 |----|------|----|
@@ -115,37 +115,38 @@
 | TPL-03 | Countdown (client) + Story | ✅ |
 | TPL-04 | Events timeline + map link | ✅ |
 | TPL-05 | `/w/[slug]` chỉ PUBLISHED; 404 nếu draft/archived | ✅ |
-| TPL-06 | Mỗi section check visibility + empty state | ⬜ |
-| TPL-07 | Test mobile 360px + PC | ⬜ |
+| TPL-06 | Mỗi section check visibility + empty state | ✅ |
+| TPL-07 | Test mobile 360px + PC | ✅ |
 
 ---
 
-## MED — Events & Media (Giai đoạn 5)  ⬜
+## MED — Events & Media (Giai đoạn 5)  ✅
 
 | Mã | Việc | TT |
 |----|------|----|
-| MED-01 | CRUD sự kiện + sortOrder | ⬜ |
-| MED-02 | `POST /api/uploads` (check admin, multipart, MIME, size, UUID) | ⬜ |
-| MED-03 | Upload cover / gallery / music / gift theo thư mục SPEC §9 | ⬜ |
-| MED-04 | Rollback: insert DB lỗi → xoá file vừa ghi (chống orphan) | ⬜ |
-| MED-05 | Route phục vụ file `/media/[id]` | ⬜ |
-| MED-06 | Sắp xếp gallery + lazy-load/thumbnail | ⬜ |
-| MED-07 | Music player: không autoplay, bật/tắt | ⬜ |
+
+| MED-01 | CRUD sự kiện + sortOrder | ✅ |
+| MED-02 | `POST /api/uploads` (check admin, multipart, MIME, size, UUID) | ✅ |
+| MED-03 | Upload cover / gallery / music / gift theo thư mục SPEC §9 | ✅ |
+| MED-04 | Rollback: insert DB lỗi → xoá file vừa ghi (chống orphan) | ✅ |
+| MED-05 | Route phục vụ file `/media/[id]` | ✅ |
+| MED-06 | Sắp xếp gallery + lazy-load/thumbnail | ✅ |
+| MED-07 | Music player: không autoplay, bật/tắt | ✅ |
 
 ---
 
-## RSVP — RSVP & Wishes (Giai đoạn 6)  ⬜
+## RSVP — RSVP & Wishes (Giai đoạn 6)  ✅
 
 | Mã | Việc | TT |
 |----|------|----|
-| RSVP-01 | Zod schema RSVP (0–20 người; NOT_ATTENDING→0) | ⬜ |
-| RSVP-02 | `POST /api/public/weddings/[slug]/rsvp` idempotent (submissionKey) | ⬜ |
-| RSVP-03 | Hash IP SHA-256 + IP_HASH_SECRET (không lưu IP thô) | ⬜ |
-| RSVP-04 | Form RSVP client: loading/error/success (tái dùng UX prototype) | ⬜ |
-| RSVP-05 | `POST .../wishes`: validate, lọc ký tự điều khiển, tạo PENDING | ⬜ |
-| RSVP-06 | Public chỉ hiển thị Wish APPROVED | ⬜ |
-| RSVP-07 | `/admin/.../rsvps` lọc attending/not/maybe + tổng số người | ⬜ |
-| RSVP-08 | `/admin/.../wishes` duyệt/ẩn/xoá | ⬜ |
+| RSVP-01 | Zod schema RSVP (0–20 người; NOT_ATTENDING→0) | ✅ |
+| RSVP-02 | `POST /api/public/weddings/[slug]/rsvp` idempotent (submissionKey) | ✅ |
+| RSVP-03 | Hash IP SHA-256 + IP_HASH_SECRET (không lưu IP thô) | ✅ |
+| RSVP-04 | Form RSVP client: loading/error/success (tái dùng UX prototype) | ✅ |
+| RSVP-05 | `POST .../wishes`: validate, lọc ký tự điều khiển, tạo PENDING | ✅ |
+| RSVP-06 | Public chỉ hiển thị Wish APPROVED | ✅ |
+| RSVP-07 | `/admin/.../rsvps` lọc attending/not/maybe + tổng số người | ✅ |
+| RSVP-08 | `/admin/.../wishes` duyệt/ẩn/xoá | ✅ |
 
 ---
 
@@ -179,10 +180,10 @@
 | Mã | Việc | TT |
 |----|------|----|
 | TEST-U1 | slug schema: dấu tiếng Việt, khoảng trắng, ký tự đặc biệt, từ cấm | ✅ |
-| TEST-U2 | RSVP schema: số âm, >20, NOT_ATTENDING nhưng >0 | ⬜ |
+| TEST-U2 | RSVP schema: số âm, >20, NOT_ATTENDING nhưng >0 | ✅ |
 | TEST-U3 | Public DTO mapper: không chứa phone/ipHash/submissionKey | ✅ |
 | TEST-U4 | Publish validator: thiếu cover/event/date phải lỗi | ⬜ |
-| TEST-U5 | File validator: sai MIME, quá size, extension kép | ⬜ |
+| TEST-U5 | File validator: sai MIME, quá size, extension kép | ✅ |
 
 ### E2E (Playwright) & thủ công
 | Mã | Việc | TT |
@@ -203,10 +204,10 @@
 | DEPLOY | 6 | 6 | 100% |
 | AUTH Admin Auth | 8 | 8 | 100% |
 | WED Wedding CRUD | 8 | 8 | 100% |
-| TPL Template | 5 | 7 | 71% |
-| MED Media | 0 | 7 | 0% |
-| RSVP | 0 | 8 | 0% |
+| TPL Template | 7 | 7 | 100% |
+| MED Media | 7 | 7 | 100% |
+| RSVP | 8 | 8 | 100% |
 | GUEST | 0 | 4 | 0% |
 | UTIL | 0 | 6 | 0% |
-| TEST | 2 | 8 | 25% |
-| **Tổng** | **54** | **87** | **62%** |
+| TEST | 4 | 8 | 50% |
+| **Tổng** | **73** | **87** | **84%** |

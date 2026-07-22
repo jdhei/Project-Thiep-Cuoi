@@ -77,10 +77,12 @@ npm run dev
 - `docs/TASKS-status.md` — Tiến độ công việc chi tiết
 - `docs/DECISIONS.md` — Quyết định kiến trúc (ADR)
 
-## Tiến độ (62%)
+## Tiến độ (84%)
 - ✅ Prototype UI/UX, Setup, Database, Deploy (Vercel + Supabase)
 - ✅ Admin Auth (login/logout/session/rate-limit/E2E)
 - ✅ Wedding CRUD (danh sách/tạo/sửa/archive/preview/publish)
 - ✅ Cloudflare Zero Trust (bảo vệ /admin/* và /preview/*)
-- 🟡 Template Public (5/7 task)
-- ⬜ Media → RSVP → Guest → Hoàn thiện
+- ✅ Template Public (visibility check, gallery, RSVP, gift, responsive)
+- ✅ Events & Media (CRUD sự kiện, upload, gallery, music player)
+- ✅ RSVP & Wishes (form khách, idempotent, hash IP, duyệt lời chúc)
+- ⬜ Guest (khách mời cá nhân) → Hoàn thiện (export/QR/OG/security)
