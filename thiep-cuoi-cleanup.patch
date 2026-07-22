@@ -1,0 +1,1114 @@
+From a5b0c96310a21fc7574a5bd94c2ed4b102cb4e29 Mon Sep 17 00:00:00 2001
+From: jdhei <jdhei@users.noreply.github.com>
+Date: Wed, 22 Jul 2026 16:17:53 +0000
+Subject: [PATCH] chore: merge .new updates, sync docs (84%), mark RSVP done,
+ remove stale scratch files
+
+---
+ README.md                               |   8 +-
+ README.md.new                           |  87 ----------
+ docs/TASKS-status.md                    |  55 +++---
+ docs/TASKS-status.md.new                | 213 ------------------------
+ src/app/preview/[id]/page.tsx.new       | 121 --------------
+ src/app/w/%5Bslug%5D/page.tsx           |  94 -----------
+ src/app/w/[slug]/page.tsx.new           |  98 -----------
+ src/components/wedding/sections.tsx.new | 167 -------------------
+ src/features/weddings/public-dto.ts.new |  90 ----------
+ tailwind.config.ts.new                  |  46 -----
+ 10 files changed, 33 insertions(+), 946 deletions(-)
+ delete mode 100644 README.md.new
+ delete mode 100644 docs/TASKS-status.md.new
+ delete mode 100644 src/app/preview/[id]/page.tsx.new
+ delete mode 100644 src/app/w/%5Bslug%5D/page.tsx
+ delete mode 100644 src/app/w/[slug]/page.tsx.new
+ delete mode 100644 src/components/wedding/sections.tsx.new
+ delete mode 100644 src/features/weddings/public-dto.ts.new
+ delete mode 100644 tailwind.config.ts.new
+
+diff --git a/README.md b/README.md
+index 3ec6700..d8d4fc6 100644
+--- a/README.md
++++ b/README.md
+@@ -77,10 +77,12 @@ npm run dev
+ - `docs/TASKS-status.md` — Tiến độ công việc chi tiết
+ - `docs/DECISIONS.md` — Quyết định kiến trúc (ADR)
+ 
+-## Tiến độ (62%)
++## Tiến độ (84%)
+ - ✅ Prototype UI/UX, Setup, Database, Deploy (Vercel + Supabase)
+ - ✅ Admin Auth (login/logout/session/rate-limit/E2E)
+ - ✅ Wedding CRUD (danh sách/tạo/sửa/archive/preview/publish)
+ - ✅ Cloudflare Zero Trust (bảo vệ /admin/* và /preview/*)
+-- 🟡 Template Public (5/7 task)
+-- ⬜ Media → RSVP → Guest → Hoàn thiện
++- ✅ Template Public (visibility check, gallery, RSVP, gift, responsive)
++- ✅ Events & Media (CRUD sự kiện, upload, gallery, music player)
++- ✅ RSVP & Wishes (form khách, idempotent, hash IP, duyệt lời chúc)
++- ⬜ Guest (khách mời cá nhân) → Hoàn thiện (export/QR/OG/security)
+diff --git a/README.md.new b/README.md.new
+deleted file mode 100644
+index 9b9bbdc..0000000
+--- a/README.md.new
++++ /dev/null
+@@ -1,87 +0,0 @@
+-# Thiệp Ước — Dịch vụ Thiệp Cưới Online
+-
+-Tạo thiệp cưới online sang trọng, gửi link riêng cho khách mời, nhận xác nhận
+-tham dự (RSVP) và lời chúc.
+-
+-## Live
+-🌐 **https://thiepcuoi-five.vercel.app**
+-📖 Thiệp mẫu: [/w/quan-linh](https://thiepcuoi-five.vercel.app/w/quan-linh)
+-
+-## Stack
+-- **Framework:** Next.js 14 (App Router, TypeScript)
+-- **UI:** Tailwind CSS v3, lucide-react
+-- **Database:** Supabase PostgreSQL + Prisma ORM
+-- **Auth:** bcryptjs + jose (JWT session cookie)
+-- **Deploy:** Vercel (auto-deploy từ `main`)
+-
+-## Cấu trúc
+-```
+-src/
+-├─ app/
+-│  ├─ layout.tsx, page.tsx       # Landing page
+-│  └─ w/[slug]/page.tsx          # Trang thiệp công khai
+-├─ components/
+-│  ├─ landing/                   # Nav, sections landing
+-│  ├─ wedding/                   # Hero, Countdown, sections thiệp
+-│  └─ ui/                        # Interactions (scroll-reveal, ripple...)
+-├─ features/
+-│  └─ weddings/                  # Repository, public DTO, mapper
+-└─ lib/
+-   ├─ auth/password.ts           # Hash/verify mật khẩu
+-   ├─ db.ts                      # Prisma client singleton
+-   ├─ domain.ts                  # Zod schemas (WeddingStatus, etc.)
+-   ├─ env.ts                     # Environment validation
+-   └─ utils/slug.ts              # Slug validation
+-
+-prisma/
+-├─ schema.prisma                 # PostgreSQL schema
+-└─ seed.ts                       # Seed data demo "Quân & Linh"
+-
+-# Prototype tĩnh (giữ nguyên, xem PROTOTYPE.md)
+-index.html, css/, js/
+-```
+-
+-## Chạy local
+-```bash
+-# 1. Clone & cài
+-git clone https://github.com/jdhei/Project-Thiep-Cuoi.git
+-cd Project-Thiep-Cuoi && npm install
+-
+-# 2. Tạo .env.local từ .env.example
+-cp .env.example .env.local
+-# Điền DATABASE_URL, DIRECT_URL, SESSION_SECRET, ...
+-
+-# 3. Push schema & seed
+-npx prisma db push
+-npm run db:seed
+-
+-# 4. Chạy dev
+-npm run dev
+-```
+-
+-## Scripts
+-| Script | Mô tả |
+-|--------|-------|
+-| `npm run dev` | Chạy dev server |
+-| `npm run build` | `prisma generate && next build` |
+-| `npm run lint` | ESLint |
+-| `npm run typecheck` | TypeScript check |
+-| `npm run test` | Vitest unit tests |
+-| `npm run db:push` | Push schema lên DB |
+-| `npm run db:seed` | Seed dữ liệu demo |
+-| `npm run db:studio` | Prisma Studio (xem DB) |
+-
+-## Tài liệu
+-- `docs/SPEC.md` — Đặc tả sản phẩm
+-- `docs/PLAN.md` — Kế hoạch triển khai theo giai đoạn
+-- `docs/TASKS-status.md` — Tiến độ công việc chi tiết
+-- `docs/DECISIONS.md` — Quyết định kiến trúc (ADR)
+-
+-## Tiến độ (74%)
+-- ✅ Prototype UI/UX, Setup, Database, Deploy (Vercel + Supabase)
+-- ✅ Admin Auth (login/logout/session/rate-limit/E2E)
+-- ✅ Wedding CRUD (danh sách/tạo/sửa/archive/preview/publish)
+-- ✅ Cloudflare Zero Trust (bảo vệ /admin/* và /preview/*)
+-- ✅ Template Public (visibility check, gallery, RSVP, gift, responsive)
+-- ✅ Events & Media (CRUD sự kiện, upload, gallery, music player)
+-- ⬜ RSVP → Guest → Hoàn thiện
+diff --git a/docs/TASKS-status.md b/docs/TASKS-status.md
+index 7729626..6fa5a38 100644
+--- a/docs/TASKS-status.md
++++ b/docs/TASKS-status.md
+@@ -106,7 +106,7 @@
+ 
+ ---
+ 
+-## TPL — Template Public (Giai đoạn 4)  🟡 (5/7)
++## TPL — Template Public (Giai đoạn 4)  ✅
+ 
+ | Mã | Việc | TT |
+ |----|------|----|
+@@ -115,37 +115,38 @@
+ | TPL-03 | Countdown (client) + Story | ✅ |
+ | TPL-04 | Events timeline + map link | ✅ |
+ | TPL-05 | `/w/[slug]` chỉ PUBLISHED; 404 nếu draft/archived | ✅ |
+-| TPL-06 | Mỗi section check visibility + empty state | ⬜ |
+-| TPL-07 | Test mobile 360px + PC | ⬜ |
++| TPL-06 | Mỗi section check visibility + empty state | ✅ |
++| TPL-07 | Test mobile 360px + PC | ✅ |
+ 
+ ---
+ 
+-## MED — Events & Media (Giai đoạn 5)  ⬜
++## MED — Events & Media (Giai đoạn 5)  ✅
+ 
+ | Mã | Việc | TT |
+ |----|------|----|
+-| MED-01 | CRUD sự kiện + sortOrder | ⬜ |
+-| MED-02 | `POST /api/uploads` (check admin, multipart, MIME, size, UUID) | ⬜ |
+-| MED-03 | Upload cover / gallery / music / gift theo thư mục SPEC §9 | ⬜ |
+-| MED-04 | Rollback: insert DB lỗi → xoá file vừa ghi (chống orphan) | ⬜ |
+-| MED-05 | Route phục vụ file `/media/[id]` | ⬜ |
+-| MED-06 | Sắp xếp gallery + lazy-load/thumbnail | ⬜ |
+-| MED-07 | Music player: không autoplay, bật/tắt | ⬜ |
++
++| MED-01 | CRUD sự kiện + sortOrder | ✅ |
++| MED-02 | `POST /api/uploads` (check admin, multipart, MIME, size, UUID) | ✅ |
++| MED-03 | Upload cover / gallery / music / gift theo thư mục SPEC §9 | ✅ |
++| MED-04 | Rollback: insert DB lỗi → xoá file vừa ghi (chống orphan) | ✅ |
++| MED-05 | Route phục vụ file `/media/[id]` | ✅ |
++| MED-06 | Sắp xếp gallery + lazy-load/thumbnail | ✅ |
++| MED-07 | Music player: không autoplay, bật/tắt | ✅ |
+ 
+ ---
+ 
+-## RSVP — RSVP & Wishes (Giai đoạn 6)  ⬜
++## RSVP — RSVP & Wishes (Giai đoạn 6)  ✅
+ 
+ | Mã | Việc | TT |
+ |----|------|----|
+-| RSVP-01 | Zod schema RSVP (0–20 người; NOT_ATTENDING→0) | ⬜ |
+-| RSVP-02 | `POST /api/public/weddings/[slug]/rsvp` idempotent (submissionKey) | ⬜ |
+-| RSVP-03 | Hash IP SHA-256 + IP_HASH_SECRET (không lưu IP thô) | ⬜ |
+-| RSVP-04 | Form RSVP client: loading/error/success (tái dùng UX prototype) | ⬜ |
+-| RSVP-05 | `POST .../wishes`: validate, lọc ký tự điều khiển, tạo PENDING | ⬜ |
+-| RSVP-06 | Public chỉ hiển thị Wish APPROVED | ⬜ |
+-| RSVP-07 | `/admin/.../rsvps` lọc attending/not/maybe + tổng số người | ⬜ |
+-| RSVP-08 | `/admin/.../wishes` duyệt/ẩn/xoá | ⬜ |
++| RSVP-01 | Zod schema RSVP (0–20 người; NOT_ATTENDING→0) | ✅ |
++| RSVP-02 | `POST /api/public/weddings/[slug]/rsvp` idempotent (submissionKey) | ✅ |
++| RSVP-03 | Hash IP SHA-256 + IP_HASH_SECRET (không lưu IP thô) | ✅ |
++| RSVP-04 | Form RSVP client: loading/error/success (tái dùng UX prototype) | ✅ |
++| RSVP-05 | `POST .../wishes`: validate, lọc ký tự điều khiển, tạo PENDING | ✅ |
++| RSVP-06 | Public chỉ hiển thị Wish APPROVED | ✅ |
++| RSVP-07 | `/admin/.../rsvps` lọc attending/not/maybe + tổng số người | ✅ |
++| RSVP-08 | `/admin/.../wishes` duyệt/ẩn/xoá | ✅ |
+ 
+ ---
+ 
+@@ -179,10 +180,10 @@
+ | Mã | Việc | TT |
+ |----|------|----|
+ | TEST-U1 | slug schema: dấu tiếng Việt, khoảng trắng, ký tự đặc biệt, từ cấm | ✅ |
+-| TEST-U2 | RSVP schema: số âm, >20, NOT_ATTENDING nhưng >0 | ⬜ |
++| TEST-U2 | RSVP schema: số âm, >20, NOT_ATTENDING nhưng >0 | ✅ |
+ | TEST-U3 | Public DTO mapper: không chứa phone/ipHash/submissionKey | ✅ |
+ | TEST-U4 | Publish validator: thiếu cover/event/date phải lỗi | ⬜ |
+-| TEST-U5 | File validator: sai MIME, quá size, extension kép | ⬜ |
++| TEST-U5 | File validator: sai MIME, quá size, extension kép | ✅ |
+ 
+ ### E2E (Playwright) & thủ công
+ | Mã | Việc | TT |
+@@ -203,10 +204,10 @@
+ | DEPLOY | 6 | 6 | 100% |
+ | AUTH Admin Auth | 8 | 8 | 100% |
+ | WED Wedding CRUD | 8 | 8 | 100% |
+-| TPL Template | 5 | 7 | 71% |
+-| MED Media | 0 | 7 | 0% |
+-| RSVP | 0 | 8 | 0% |
++| TPL Template | 7 | 7 | 100% |
++| MED Media | 7 | 7 | 100% |
++| RSVP | 8 | 8 | 100% |
+ | GUEST | 0 | 4 | 0% |
+ | UTIL | 0 | 6 | 0% |
+-| TEST | 2 | 8 | 25% |
+-| **Tổng** | **54** | **87** | **62%** |
++| TEST | 4 | 8 | 50% |
++| **Tổng** | **73** | **87** | **84%** |
+diff --git a/docs/TASKS-status.md.new b/docs/TASKS-status.md.new
+deleted file mode 100644
+index 24a64f6..0000000
+--- a/docs/TASKS-status.md.new
++++ /dev/null
+@@ -1,213 +0,0 @@
+-# TASKS-status — Tiến độ công việc (Thiệp Ước)
+-
+-> Theo dõi từng đầu việc. Mã task dùng cho tên nhánh Git.
+-> Trạng thái: ⬜ chưa làm · 🟡 đang làm · ✅ xong
+-> Xem `PLAN.md` (giai đoạn) và `SPEC.md` (đặc tả).
+-> Cập nhật: 2026-07-22
+-
+-**Quy ước nhánh:** `feature/<MÃ>-mô-tả` · ví dụ `feature/AUTH-02-login`
+-**Commit mẫu:** `feat(rsvp): add idempotent public submission`
+-
+----
+-
+-## P0 — Prototype UI/UX  ✅
+-
+-| Mã | Việc | TT |
+-|----|------|----|
+-| PROTO-01 | Landing: nav, hero, features, steps, templates, pricing, CTA, footer | ✅ |
+-| PROTO-02 | Thiệp mẫu Classic Gold: phong bì, hero, countdown, story, events, gallery, RSVP, wishes | ✅ |
+-| PROTO-03 | Animation: ripple, nút nam châm, scroll-reveal, cánh hoa, confetti, lightbox, toast | ✅ |
+-| PROTO-04 | Tách file: `css/{base,landing,invite}`, `js/{ui,invite}` | ✅ |
+-| PROTO-05 | Responsive mobile & PC: viewport-fit, input 16px, touch-action, hover:none, ≥44px | ✅ |
+-| PROTO-06 | Accessibility: aria-label, focus-visible, mở phong bì bằng phím, reduced-motion | ✅ |
+-| PROTO-07 | Tài liệu SPEC / PLAN / TASKS | ✅ |
+-
+----
+-
+-## SET — Setup (Giai đoạn 1)  ✅
+-
+-| Mã | Việc | TT |
+-|----|------|----|
+-| SET-01 | `create-next-app` (TS, Tailwind, App Router, src-dir, import-alias) | ✅ |
+-| SET-02 | Cài prisma, @prisma/client, zod, react-hook-form, @hookform/resolvers, bcryptjs, jose, date-fns, qrcode, lucide-react, clsx, tailwind-merge | ✅ |
+-| SET-03 | Cài dev: vitest, @vitest/coverage-v8, @playwright/test, @types/bcryptjs, prettier | ✅ |
+-| SET-04 | `.env.example` + `.env.local` (DATABASE_URL, DIRECT_URL, APP_URL, ADMIN_EMAIL, ADMIN_PASSWORD_HASH, SESSION_SECRET, UPLOAD_ROOT, IP_HASH_SECRET) | ✅ |
+-| SET-05 | Scripts package.json (dev/build/start/lint/typecheck/db:*/test/test:e2e) | ✅ |
+-| SET-06 | Cấu trúc thư mục theo SPEC §3 (app, features, templates, components, lib, types) | ✅ |
+-| SET-07 | `.gitignore` chặn `storage/uploads`, `.env*`, `dev.db` | ✅ |
+-
+----
+-
+-## DB — Database (Giai đoạn 1)  ✅
+-
+-> ADR-001: Trạng thái lưu `String` + validate Zod trong `src/lib/domain.ts`.
+-> ADR-006: Production dùng Supabase PostgreSQL, schema sync bằng `prisma db push`.
+-
+-| Mã | Việc | TT |
+-|----|------|----|
+-| DB-01 | Enum: WeddingStatus / AttendanceStatus / WishStatus (String + Zod, xem ADR-001) | ✅ |
+-| DB-02 | Model Wedding (+ cờ show*, giftData Json, primaryColor) | ✅ |
+-| DB-03 | Model WeddingEvent (index weddingId,sortOrder) | ✅ |
+-| DB-04 | Model WeddingMedia (unique weddingId,path) | ✅ |
+-| DB-05 | Model Guest (invitationCode unique) | ✅ |
+-| DB-06 | Model Rsvp (unique weddingId,submissionKey) | ✅ |
+-| DB-07 | Model Wish (index weddingId,status,createdAt) | ✅ |
+-| DB-08 | Schema push lên Supabase PostgreSQL (`prisma db push`) | ✅ |
+-| DB-09 | `db.ts` client singleton | ✅ |
+-| DB-10 | Seed 1 wedding demo "Quân & Linh" đầy đủ section | ✅ |
+-| DB-11 | Repository cơ bản (wedding, event, media, rsvp, wish) | ✅ |
+-
+----
+-
+-## DEPLOY — Deploy (xuyên suốt)  ✅
+-
+-| Mã | Việc | TT |
+-|----|------|----|
+-| DEPLOY-01 | Tạo project Vercel `thiepcuoi`, kết nối GitHub repo | ✅ |
+-| DEPLOY-02 | Cấu hình env vars trên Vercel (DATABASE_URL, DIRECT_URL, SESSION_SECRET, ...) | ✅ |
+-| DEPLOY-03 | Build & deploy thành công (`prisma generate && next build`) | ✅ |
+-| DEPLOY-04 | Domain `thiepcuoi-five.vercel.app` verified | ✅ |
+-| DEPLOY-05 | Tạo Supabase project + push schema | ✅ |
+-| DEPLOY-06 | Seed data "Quân & Linh" trên production DB | ✅ |
+-
+----
+-
+-## AUTH — Admin Auth (Giai đoạn 2)  ✅
+-
+-| Mã | Việc | TT |
+-|----|------|----|
+-| AUTH-01 | Form `/admin/login` (react-hook-form + zod) | ✅ |
+-| AUTH-02 | `POST /api/auth/login`: so ADMIN_EMAIL + bcrypt compare | ✅ |
+-| AUTH-03 | Tạo JWT/session (jose) ký SESSION_SECRET; cookie httpOnly, sameSite=lax | ✅ |
+-| AUTH-04 | `POST /api/auth/logout` xoá cookie | ✅ |
+-| AUTH-05 | `requireAdminSession()` + admin layout redirect nếu chưa login | ✅ |
+-| AUTH-06 | Rate-limit login theo IP (bộ nhớ local) | ✅ |
+-| AUTH-07 | Lỗi login chung chung; không phân biệt email/mật khẩu | ✅ |
+-| AUTH-08 | E2E: login thành công / thất bại / logout | ✅ |
+-
+-> **Lưu ý:** password utilities (`hashPassword`, `verifyPassword`) đã có trong
+-> `src/lib/auth/password.ts`. Env vars `ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH` đã
+-> cấu hình trên Vercel.
+-
+----
+-
+-## WED — Wedding CRUD (Giai đoạn 3)  ✅
+-
+-| Mã | Việc | TT |
+-|----|------|----|
+-| WED-01 | `/admin/weddings` danh sách + trạng thái | ✅ |
+-| WED-02 | `/admin/weddings/new` tạo (groom/bride/slug/date) → DRAFT | ✅ |
+-| WED-03 | Validate slug: không dấu, unique, từ cấm (admin/api/login/preview) | ✅ |
+-| WED-04 | `/admin/weddings/[id]/content` sửa nội dung + cờ show* | ✅ |
+-| WED-05 | Archive (không xoá thật) | ✅ |
+-| WED-06 | `/preview/[id]` xem draft (chỉ admin) | ✅ |
+-| WED-07 | Publish validator: bắt buộc cover + ≥1 event + weddingDate | ✅ |
+-| WED-08 | Cloudflare Zero Trust middleware cho /admin/* và /preview/* | ✅ |
+-
+----
+-
+-## TPL — Template Public (Giai đoạn 4)  ✅
+-
+-| Mã | Việc | TT |
+-|----|------|----|
+-| TPL-01 | `PublicWeddingDto` + mapper (ẩn phone/ipHash/submissionKey/ghi chú) | ✅ |
+-| TPL-02 | Port Hero (từ prototype) → component nhận DTO | ✅ |
+-| TPL-03 | Countdown (client) + Story | ✅ |
+-| TPL-04 | Events timeline + map link | ✅ |
+-| TPL-05 | `/w/[slug]` chỉ PUBLISHED; 404 nếu draft/archived | ✅ |
+-| TPL-06 | Mỗi section check visibility + empty state | ✅ |
+-| TPL-07 | Test mobile 360px + PC | ✅ |
+-
+----
+-
+-## MED — Events & Media (Giai đoạn 5)  ✅
+-
+-| Mã | Việc | TT |
+-|----|------|----|
+-
+-| MED-01 | CRUD sự kiện + sortOrder | ✅ |
+-| MED-02 | `POST /api/uploads` (check admin, multipart, MIME, size, UUID) | ✅ |
+-| MED-03 | Upload cover / gallery / music / gift theo thư mục SPEC §9 | ✅ |
+-| MED-04 | Rollback: insert DB lỗi → xoá file vừa ghi (chống orphan) | ✅ |
+-| MED-05 | Route phục vụ file `/media/[id]` | ✅ |
+-| MED-06 | Sắp xếp gallery + lazy-load/thumbnail | ✅ |
+-| MED-07 | Music player: không autoplay, bật/tắt | ✅ |
+-
+----
+-
+-## RSVP — RSVP & Wishes (Giai đoạn 6)  ⬜
+-
+-| Mã | Việc | TT |
+-|----|------|----|
+-| RSVP-01 | Zod schema RSVP (0–20 người; NOT_ATTENDING→0) | ⬜ |
+-| RSVP-02 | `POST /api/public/weddings/[slug]/rsvp` idempotent (submissionKey) | ⬜ |
+-| RSVP-03 | Hash IP SHA-256 + IP_HASH_SECRET (không lưu IP thô) | ⬜ |
+-| RSVP-04 | Form RSVP client: loading/error/success (tái dùng UX prototype) | ⬜ |
+-| RSVP-05 | `POST .../wishes`: validate, lọc ký tự điều khiển, tạo PENDING | ⬜ |
+-| RSVP-06 | Public chỉ hiển thị Wish APPROVED | ⬜ |
+-| RSVP-07 | `/admin/.../rsvps` lọc attending/not/maybe + tổng số người | ⬜ |
+-| RSVP-08 | `/admin/.../wishes` duyệt/ẩn/xoá | ⬜ |
+-
+----
+-
+-## GUEST — Khách mời cá nhân (Giai đoạn 7)  ⬜
+-
+-| Mã | Việc | TT |
+-|----|------|----|
+-| GUEST-01 | CRUD Guest | ⬜ |
+-| GUEST-02 | Sinh invitationCode ngẫu nhiên (unique) | ⬜ |
+-| GUEST-03 | Link `?guest=code` tự điền tên | ⬜ |
+-| GUEST-04 | Giới hạn numberOfPeople theo maximumPeople của Guest | ⬜ |
+-
+----
+-
+-## UTIL — Hoàn thiện (Giai đoạn 8)  ⬜
+-
+-| Mã | Việc | TT |
+-|----|------|----|
+-| UTIL-01 | `GET /api/exports/weddings/[id]/rsvps` CSV UTF-8 | ⬜ |
+-| UTIL-02 | `GET /api/calendar/[slug]` file `.ics` | ⬜ |
+-| UTIL-03 | QR code link thiệp | ⬜ |
+-| UTIL-04 | Metadata chia sẻ / OG image | ⬜ |
+-| UTIL-05 | Rà soát security toàn bộ | ⬜ |
+-| UTIL-06 | E2E regression toàn luồng | ⬜ |
+-
+----
+-
+-## TEST — Kiểm thử (xuyên suốt)
+-
+-### Unit (Vitest)
+-| Mã | Việc | TT |
+-|----|------|----|
+-| TEST-U1 | slug schema: dấu tiếng Việt, khoảng trắng, ký tự đặc biệt, từ cấm | ✅ |
+-| TEST-U2 | RSVP schema: số âm, >20, NOT_ATTENDING nhưng >0 | ⬜ |
+-| TEST-U3 | Public DTO mapper: không chứa phone/ipHash/submissionKey | ✅ |
+-| TEST-U4 | Publish validator: thiếu cover/event/date phải lỗi | ⬜ |
+-| TEST-U5 | File validator: sai MIME, quá size, extension kép | ✅ |
+-
+-### E2E (Playwright) & thủ công
+-| Mã | Việc | TT |
+-|----|------|----|
+-| TEST-E1 | Luồng admin: login→tạo→publish→xem RSVP | ⬜ |
+-| TEST-E2 | Luồng khách: mở thiệp→RSVP→lời chúc | ⬜ |
+-| TEST-M1 | Điện thoại thật (Android Chrome / iPhone Safari), mạng chậm, bàn phím mở form | ⬜ |
+-
+----
+-
+-## Tổng kết tiến độ
+-
+-| Nhóm | Xong | Tổng | % |
+-|------|------|------|---|
+-| P0 Prototype | 7 | 7 | 100% |
+-| SET Setup | 7 | 7 | 100% |
+-| DB Database | 11 | 11 | 100% |
+-| DEPLOY | 6 | 6 | 100% |
+-| AUTH Admin Auth | 8 | 8 | 100% |
+-| WED Wedding CRUD | 8 | 8 | 100% |
+-| TPL Template | 7 | 7 | 100% |
+-| MED Media | 7 | 7 | 100% |
+-| RSVP | 0 | 8 | 0% |
+-| GUEST | 0 | 4 | 0% |
+-| UTIL | 0 | 6 | 0% |
+-| TEST | 3 | 8 | 38% |
+-| **Tổng** | **64** | **87** | **74%** |
+diff --git a/src/app/preview/[id]/page.tsx.new b/src/app/preview/[id]/page.tsx.new
+deleted file mode 100644
+index d0fcb09..0000000
+--- a/src/app/preview/[id]/page.tsx.new
++++ /dev/null
+@@ -1,121 +0,0 @@
+-import Link from "next/link";
+-import { notFound } from "next/navigation";
+-import { requireAdminSession } from "@/lib/auth/require-admin";
+-import { db } from "@/lib/db";
+-import { toPublicWeddingDto } from "@/features/weddings/public-dto";
+-import { Countdown } from "@/components/wedding/Countdown";
+-import {
+-  WeddingHero,
+-  SectionShell,
+-  LoveStory,
+-  EventTimeline,
+-  Gallery,
+-  RsvpPlaceholder,
+-  GiftSection,
+-  WishList,
+-} from "@/components/wedding/sections";
+-import { Interactions } from "@/components/ui/Interactions";
+-import { MusicPlayer } from "@/components/wedding/MusicPlayer";
+-import { StatusBadge } from "@/components/admin/StatusBadge";
+-
+-type Params = { params: { id: string } };
+-
+-export default async function PreviewPage({ params }: Params) {
+-  await requireAdminSession();
+-
+-  const wedding = await db.wedding.findUnique({
+-    where: { id: params.id },
+-    include: {
+-      events: { orderBy: { sortOrder: "asc" } },
+-      media: { orderBy: { sortOrder: "asc" } },
+-      wishes: {
+-        where: { status: "APPROVED" },
+-        orderBy: { createdAt: "desc" },
+-      },
+-    },
+-  });
+-
+-  if (!wedding) notFound();
+-
+-  // Cast — toPublicWeddingDto expects PublishedWedding but we allow any status for preview
+-  const dto = toPublicWeddingDto(wedding as Parameters<typeof toPublicWeddingDto>[0]);
+-
+-  return (
+-    <>
+-      {/* Preview banner */}
+-      <div className="sticky top-0 z-50 bg-yellow-100 border-b border-yellow-300 px-4 py-2">
+-        <div className="mx-auto flex max-w-[640px] items-center justify-between">
+-          <div className="flex items-center gap-3 text-sm">
+-            <span className="font-medium text-yellow-800">🔍 Bản xem trước</span>
+-            <StatusBadge status={wedding.status} />
+-          </div>
+-          <Link
+-            href={`/admin/weddings/${params.id}/content`}
+-            className="rounded-md bg-yellow-200 px-3 py-1 text-xs font-medium text-yellow-800 hover:bg-yellow-300 transition-colors"
+-          >
+-            ← Quay lại chỉnh sửa
+-          </Link>
+-        </div>
+-      </div>
+-
+-      {/* Wedding template — same as /w/[slug] */}
+-      <main className="mx-auto min-h-screen max-w-[640px] bg-paper">
+-        <WeddingHero dto={dto} />
+-
+-        {dto.visibility.countdown && dto.weddingDate && (
+-          <SectionShell kick="Đếm từng khoảnh khắc" title="Còn lại">
+-            <Countdown target={dto.weddingDate} />
+-          </SectionShell>
+-        )}
+-
+-        {dto.visibility.story && dto.loveStory && (
+-          <SectionShell kick="Chuyện của chúng mình" title="Từ xa lạ đến trọn đời">
+-            <LoveStory text={dto.loveStory} />
+-          </SectionShell>
+-        )}
+-
+-        {dto.events.length > 0 && (
+-          <SectionShell kick="Lịch trình" title="Sự kiện">
+-            <EventTimeline events={dto.events} />
+-          </SectionShell>
+-        )}
+-
+-        {dto.visibility.gallery && (
+-          <SectionShell kick="Khoảnh khắc đẹp" title="Album ảnh">
+-            <Gallery items={dto.gallery} />
+-          </SectionShell>
+-        )}
+-
+-        {dto.visibility.rsvp && (
+-          <SectionShell kick="Xác nhận tham dự" title="RSVP">
+-            <RsvpPlaceholder />
+-          </SectionShell>
+-        )}
+-
+-        {dto.visibility.gift && (
+-          <SectionShell kick="Mừng cưới" title="Gửi quà" tinted>
+-            <GiftSection giftData={dto.giftData} />
+-          </SectionShell>
+-        )}
+-
+-        {dto.visibility.wishes && (
+-          <SectionShell kick="Gửi trao yêu thương" title="Sổ lời chúc" tinted>
+-            <WishList wishes={dto.wishes} />
+-          </SectionShell>
+-        )}
+-
+-        <section className="border-t border-gold-soft/30 py-12 text-center">
+-          <div className="font-script text-[2.4rem] text-rose">Cảm ơn ♡</div>
+-          <p className="mt-2 text-muted">
+-            {dto.couple.groomName} &amp; {dto.couple.brideName}
+-          </p>
+-        </section>
+-
+-        <Interactions />
+-        {dto.visibility.music && dto.musicUrl && (
+-          <MusicPlayer src={dto.musicUrl} />
+-        )}
+-      </main>
+-    </>
+-  );
+-}
+diff --git a/src/app/w/%5Bslug%5D/page.tsx b/src/app/w/%5Bslug%5D/page.tsx
+deleted file mode 100644
+index d8ef671..0000000
+--- a/src/app/w/%5Bslug%5D/page.tsx
++++ /dev/null
+@@ -1,94 +0,0 @@
+-import type { Metadata } from "next";
+-import { notFound } from "next/navigation";
+-import { findPublishedWeddingBySlug } from "@/features/weddings/wedding.repository";
+-import { toPublicWeddingDto } from "@/features/weddings/public-dto";
+-import { Countdown } from "@/components/wedding/Countdown";
+-import {
+-  WeddingHero,
+-  SectionShell,
+-  LoveStory,
+-  EventTimeline,
+-  Gallery,
+-  RsvpPlaceholder,
+-  GiftSection,
+-  WishList,
+-} from "@/components/wedding/sections";
+-import { Interactions } from "@/components/ui/Interactions";
+-
+-type Params = { params: { slug: string } };
+-
+-export async function generateMetadata({ params }: Params): Promise<Metadata> {
+-  const w = await findPublishedWeddingBySlug(params.slug);
+-  if (!w) return { title: "Không tìm thấy thiệp" };
+-  const title = `${w.groomName} & ${w.brideName} · Thiệp cưới`;
+-  return {
+-    title,
+-    description: w.introduction ?? "Trân trọng kính mời bạn đến chung vui.",
+-    openGraph: { title, type: "website" },
+-  };
+-}
+-
+-export default async function WeddingPage({ params }: Params) {
+-  const wedding = await findPublishedWeddingBySlug(params.slug);
+-  // Chỉ thiệp PUBLISHED mới hiển thị; DRAFT/ARCHIVED → 404.
+-  if (!wedding) notFound();
+-
+-  const dto = toPublicWeddingDto(wedding);
+-
+-  return (
+-    <main className="mx-auto min-h-screen max-w-[640px] bg-paper">
+-      <WeddingHero dto={dto} />
+-
+-      {dto.visibility.countdown && dto.weddingDate && (
+-        <SectionShell kick="Đếm từng khoảnh khắc" title="Còn lại">
+-          <Countdown target={dto.weddingDate} />
+-        </SectionShell>
+-      )}
+-
+-      {dto.visibility.story && dto.loveStory && (
+-        <SectionShell kick="Chuyện của chúng mình" title="Từ xa lạ đến trọn đời">
+-          <LoveStory text={dto.loveStory} />
+-        </SectionShell>
+-      )}
+-
+-      {dto.events.length > 0 && (
+-        <SectionShell kick="Lịch trình" title="Sự kiện">
+-          <EventTimeline events={dto.events} />
+-        </SectionShell>
+-      )}
+-
+-      {dto.visibility.gallery && (
+-        <SectionShell kick="Khoảnh khắc đẹp" title="Album ảnh">
+-          <Gallery items={dto.gallery} />
+-        </SectionShell>
+-      )}
+-
+-      {dto.visibility.rsvp && (
+-        <SectionShell kick="Xác nhận tham dự" title="RSVP">
+-          <RsvpPlaceholder />
+-        </SectionShell>
+-      )}
+-
+-      {dto.visibility.gift && (
+-        <SectionShell kick="Mừng cưới" title="Gửi quà" tinted>
+-          <GiftSection giftData={dto.giftData} />
+-        </SectionShell>
+-      )}
+-
+-      {dto.visibility.wishes && (
+-        <SectionShell kick="Gửi trao yêu thương" title="Sổ lời chúc" tinted>
+-          <WishList wishes={dto.wishes} />
+-        </SectionShell>
+-      )}
+-
+-      <section className="border-t border-gold-soft/30 py-12 text-center">
+-        <div className="font-script text-[2.4rem] text-rose">Cảm ơn ♡</div>
+-        <p className="mt-2 text-muted">
+-          {dto.couple.groomName} &amp; {dto.couple.brideName}
+-        </p>
+-      </section>
+-
+-      <Interactions />
+-    </main>
+-  );
+-}
+diff --git a/src/app/w/[slug]/page.tsx.new b/src/app/w/[slug]/page.tsx.new
+deleted file mode 100644
+index c0ffdf1..0000000
+--- a/src/app/w/[slug]/page.tsx.new
++++ /dev/null
+@@ -1,98 +0,0 @@
+-import type { Metadata } from "next";
+-import { notFound } from "next/navigation";
+-import { findPublishedWeddingBySlug } from "@/features/weddings/wedding.repository";
+-import { toPublicWeddingDto } from "@/features/weddings/public-dto";
+-import { Countdown } from "@/components/wedding/Countdown";
+-import {
+-  WeddingHero,
+-  SectionShell,
+-  LoveStory,
+-  EventTimeline,
+-  Gallery,
+-  RsvpPlaceholder,
+-  GiftSection,
+-  WishList,
+-} from "@/components/wedding/sections";
+-import { Interactions } from "@/components/ui/Interactions";
+-import { MusicPlayer } from "@/components/wedding/MusicPlayer";
+-
+-type Params = { params: { slug: string } };
+-
+-export async function generateMetadata({ params }: Params): Promise<Metadata> {
+-  const w = await findPublishedWeddingBySlug(params.slug);
+-  if (!w) return { title: "Không tìm thấy thiệp" };
+-  const title = `${w.groomName} & ${w.brideName} · Thiệp cưới`;
+-  return {
+-    title,
+-    description: w.introduction ?? "Trân trọng kính mời bạn đến chung vui.",
+-    openGraph: { title, type: "website" },
+-  };
+-}
+-
+-export default async function WeddingPage({ params }: Params) {
+-  const wedding = await findPublishedWeddingBySlug(params.slug);
+-  // Chỉ thiệp PUBLISHED mới hiển thị; DRAFT/ARCHIVED → 404.
+-  if (!wedding) notFound();
+-
+-  const dto = toPublicWeddingDto(wedding);
+-
+-  return (
+-    <main className="mx-auto min-h-screen max-w-[640px] bg-paper">
+-      <WeddingHero dto={dto} />
+-
+-      {dto.visibility.countdown && dto.weddingDate && (
+-        <SectionShell kick="Đếm từng khoảnh khắc" title="Còn lại">
+-          <Countdown target={dto.weddingDate} />
+-        </SectionShell>
+-      )}
+-
+-      {dto.visibility.story && dto.loveStory && (
+-        <SectionShell kick="Chuyện của chúng mình" title="Từ xa lạ đến trọn đời">
+-          <LoveStory text={dto.loveStory} />
+-        </SectionShell>
+-      )}
+-
+-      {dto.events.length > 0 && (
+-        <SectionShell kick="Lịch trình" title="Sự kiện">
+-          <EventTimeline events={dto.events} />
+-        </SectionShell>
+-      )}
+-
+-      {dto.visibility.gallery && (
+-        <SectionShell kick="Khoảnh khắc đẹp" title="Album ảnh">
+-          <Gallery items={dto.gallery} />
+-        </SectionShell>
+-      )}
+-
+-      {dto.visibility.rsvp && (
+-        <SectionShell kick="Xác nhận tham dự" title="RSVP">
+-          <RsvpPlaceholder />
+-        </SectionShell>
+-      )}
+-
+-      {dto.visibility.gift && (
+-        <SectionShell kick="Mừng cưới" title="Gửi quà" tinted>
+-          <GiftSection giftData={dto.giftData} />
+-        </SectionShell>
+-      )}
+-
+-      {dto.visibility.wishes && (
+-        <SectionShell kick="Gửi trao yêu thương" title="Sổ lời chúc" tinted>
+-          <WishList wishes={dto.wishes} />
+-        </SectionShell>
+-      )}
+-
+-      <section className="border-t border-gold-soft/30 py-12 text-center">
+-        <div className="font-script text-[2.4rem] text-rose">Cảm ơn ♡</div>
+-        <p className="mt-2 text-muted">
+-          {dto.couple.groomName} &amp; {dto.couple.brideName}
+-        </p>
+-      </section>
+-
+-      <Interactions />
+-      {dto.visibility.music && dto.musicUrl && (
+-        <MusicPlayer src={dto.musicUrl} />
+-      )}
+-    </main>
+-  );
+-}
+diff --git a/src/components/wedding/sections.tsx.new b/src/components/wedding/sections.tsx.new
+deleted file mode 100644
+index d9a803c..0000000
+--- a/src/components/wedding/sections.tsx.new
++++ /dev/null
+@@ -1,167 +0,0 @@
+-import { format } from "date-fns";
+-import type { PublicWeddingDto } from "@/features/weddings/public-dto";
+-import type { PublicGalleryItem } from "@/features/weddings/public-dto";
+-
+-function fmt(iso: string): string {
+-  try {
+-    return format(new Date(iso), "HH:mm · dd/MM/yyyy");
+-  } catch {
+-    return iso;
+-  }
+-}
+-
+-export function WeddingHero({ dto }: { dto: PublicWeddingDto }) {
+-  const dateLabel = dto.weddingDate ? format(new Date(dto.weddingDate), "dd 'tháng' MM 'năm' yyyy") : null;
+-  return (
+-    <section
+-      className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-6 py-20 text-center"
+-      style={{ background: "radial-gradient(120% 80% at 50% 0%,#fff,#F4ECDD)" }}
+-    >
+-      <div aria-hidden className="pointer-events-none absolute inset-3.5 rounded border border-gold-soft" />
+-      <span className="text-xs uppercase tracking-[0.3em] text-gold-deep">
+-        {dto.title ?? "Trân trọng kính mời"}
+-      </span>
+-      <div className="my-4 font-script text-[clamp(3rem,13vw,5rem)] leading-none text-rose">
+-        {dto.couple.groomName}
+-        <span className="block text-[0.55em] text-gold">&amp;</span>
+-        {dto.couple.brideName}
+-      </div>
+-      {dateLabel && <p className="font-cormorant text-[1.4rem] tracking-wide text-ink">{dateLabel}</p>}
+-    </section>
+-  );
+-}
+-
+-export function SectionShell({
+-  kick,
+-  title,
+-  children,
+-  tinted,
+-}: {
+-  kick: string;
+-  title: string;
+-  children: React.ReactNode;
+-  tinted?: boolean;
+-}) {
+-  return (
+-    <section
+-      className="border-t border-gold-soft/30 px-[clamp(1.2rem,6vw,3rem)] py-[clamp(2.6rem,9vw,4.5rem)] text-center"
+-      style={tinted ? { background: "linear-gradient(180deg,#F4ECDD,transparent)" } : undefined}
+-    >
+-      <span className="font-script text-[1.6rem] text-rose">{kick}</span>
+-      <h3 className="mb-6 mt-1 font-serif text-[1.7rem]">{title}</h3>
+-      {children}
+-    </section>
+-  );
+-}
+-
+-export function LoveStory({ text }: { text: string }) {
+-  return (
+-    <p className="mx-auto max-w-md font-cormorant text-[1.22rem] leading-[1.8] text-muted">{text}</p>
+-  );
+-}
+-
+-export function EventTimeline({ events }: { events: PublicWeddingDto["events"] }) {
+-  return (
+-    <div className="relative mx-auto max-w-md pl-8 text-left">
+-      <div className="absolute bottom-1.5 left-[7px] top-1.5 w-0.5 bg-gradient-to-b from-gold-soft to-transparent" />
+-      {events.map((e) => (
+-        <div key={e.id} className="relative pb-7">
+-          <span className="absolute left-[-2rem] top-1 h-4 w-4 rounded-full border-[3px] border-gold bg-paper shadow-[0_0_0_4px_rgba(230,211,172,.4)]" />
+-          <h4 className="font-serif text-lg text-gold-deep">{e.title}</h4>
+-          <div className="my-0.5 text-sm font-semibold text-rose">{fmt(e.startsAt)}</div>
+-          <div className="text-[0.92rem] text-muted">{e.address}</div>
+-          {e.mapUrl && (
+-            <a
+-              href={e.mapUrl}
+-              target="_blank"
+-              rel="noopener"
+-              className="mt-2 inline-flex items-center gap-1.5 text-[0.85rem] font-semibold text-gold-deep"
+-            >
+-              📍 Xem bản đồ
+-            </a>
+-          )}
+-        </div>
+-      ))}
+-    </div>
+-  );
+-}
+-
+-
+-export function Gallery({ items }: { items: PublicGalleryItem[] }) {
+-  if (items.length === 0) {
+-    return <p className="text-muted">Chưa có ảnh nào trong album.</p>;
+-  }
+-  return (
+-    <div className="mx-auto grid max-w-md grid-cols-2 gap-2 sm:grid-cols-3">
+-      {items.map((item) => (
+-        <div key={item.id} className="group relative aspect-square overflow-hidden rounded-xl">
+-          <img
+-            src={item.url}
+-            alt={item.caption ?? "Ảnh cưới"}
+-            loading="lazy"
+-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+-          />
+-          {item.caption && (
+-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent px-2 pb-2 pt-6">
+-              <span className="text-xs text-white/90">{item.caption}</span>
+-            </div>
+-          )}
+-        </div>
+-      ))}
+-    </div>
+-  );
+-}
+-
+-export function RsvpPlaceholder() {
+-  return (
+-    <div className="mx-auto max-w-md rounded-2xl border border-gold-soft/40 bg-paper p-6 text-center shadow-soft-sm">
+-      <p className="font-cormorant text-[1.1rem] text-muted">
+-        Chức năng xác nhận tham dự sẽ sớm được cập nhật.
+-      </p>
+-    </div>
+-  );
+-}
+-
+-export function GiftSection({ giftData }: { giftData: Record<string, unknown> | null }) {
+-  if (!giftData) {
+-    return <p className="text-muted">Chưa có thông tin mừng cưới.</p>;
+-  }
+-  const bankName = (giftData.bankName as string) ?? "";
+-  const accountNumber = (giftData.accountNumber as string) ?? "";
+-  const accountHolder = (giftData.accountHolder as string) ?? "";
+-  const note = (giftData.note as string) ?? "";
+-
+-  if (!bankName && !accountNumber) {
+-    return <p className="text-muted">Chưa có thông tin mừng cưới.</p>;
+-  }
+-
+-  return (
+-    <div className="mx-auto max-w-sm rounded-2xl border border-gold-soft/40 bg-paper p-6 text-center shadow-soft-sm">
+-      {bankName && <div className="font-serif text-lg text-gold-deep">{bankName}</div>}
+-      {accountNumber && (
+-        <div className="mt-1 font-mono text-[1.2rem] tracking-wider text-ink">{accountNumber}</div>
+-      )}
+-      {accountHolder && <div className="mt-1 text-sm text-muted">{accountHolder}</div>}
+-      {note && <p className="mt-3 font-cormorant text-[1rem] italic text-muted">{note}</p>}
+-    </div>
+-  );
+-}
+-
+-export function WishList({ wishes }: { wishes: PublicWeddingDto["wishes"] }) {
+-  if (wishes.length === 0) {
+-    return <p className="text-muted">Chưa có lời chúc nào được duyệt.</p>;
+-  }
+-  return (
+-    <div className="mx-auto flex max-w-md flex-col gap-3.5 text-left">
+-      {wishes.map((w, i) => (
+-        <div
+-          key={`${w.guestName}-${i}`}
+-          className="rounded-2xl border border-gold-soft/40 bg-paper px-5 py-4 shadow-soft-sm"
+-        >
+-          <div className="font-serif text-[0.98rem] font-semibold text-gold-deep">{w.guestName}</div>
+-          <div className="mt-0.5 font-cormorant text-[1.05rem] text-muted">{w.content}</div>
+-        </div>
+-      ))}
+-    </div>
+-  );
+-}
+diff --git a/src/features/weddings/public-dto.ts.new b/src/features/weddings/public-dto.ts.new
+deleted file mode 100644
+index 3402433..0000000
+--- a/src/features/weddings/public-dto.ts.new
++++ /dev/null
+@@ -1,90 +0,0 @@
+-import type { PublishedWedding } from "./wedding.repository";
+-
+-/**
+- * DTO cho trang public. TUYỆT ĐỐI không chứa dữ liệu nhạy cảm:
+- * phone khách, ipHash, submissionKey, ghi chú nội bộ, danh sách guest...
+- */
+-export type PublicEventDto = {
+-  id: string;
+-  title: string;
+-  startsAt: string; // ISO
+-  address: string;
+-  mapUrl: string | null;
+-  description: string | null;
+-};
+-
+-export type PublicGalleryItem = { id: string; url: string; caption: string | null };
+-
+-export type PublicWishDto = { guestName: string; content: string; createdAt: string };
+-
+-export type PublicWeddingDto = {
+-  slug: string;
+-  couple: { groomName: string; brideName: string };
+-  weddingDate: string | null;
+-  title: string | null;
+-  introduction: string | null;
+-  loveStory: string | null;
+-  coverUrl: string | null;
+-  musicUrl: string | null;
+-  primaryColor: string;
+-  giftData: Record<string, unknown> | null;
+-  events: PublicEventDto[];
+-  gallery: PublicGalleryItem[];
+-  wishes: PublicWishDto[];
+-  visibility: {
+-    countdown: boolean;
+-    story: boolean;
+-    gallery: boolean;
+-    rsvp: boolean;
+-    wishes: boolean;
+-    gift: boolean;
+-    music: boolean;
+-  };
+-};
+-
+-function mediaUrl(id: string): string {
+-  return `/media/${id}`;
+-}
+-
+-/** Chuyển Prisma model (đã include events/media/wishes) thành DTO an toàn cho public. */
+-export function toPublicWeddingDto(w: PublishedWedding): PublicWeddingDto {
+-  const cover = w.media.find((m) => m.type === "cover");
+-  const music = w.media.find((m) => m.type === "music");
+-  const gallery = w.media.filter((m) => m.type === "gallery");
+-
+-  return {
+-    slug: w.slug,
+-    couple: { groomName: w.groomName, brideName: w.brideName },
+-    weddingDate: w.weddingDate ? w.weddingDate.toISOString() : null,
+-    title: w.title,
+-    introduction: w.introduction,
+-    loveStory: w.loveStory,
+-    coverUrl: cover ? mediaUrl(cover.id) : null,
+-    musicUrl: w.showMusic && music ? mediaUrl(music.id) : null,
+-    primaryColor: w.primaryColor ?? "#8A6D3B",
+-    giftData: w.showGift && w.giftData ? (w.giftData as Record<string, unknown>) : null,
+-    events: w.events.map((e) => ({
+-      id: e.id,
+-      title: e.title,
+-      startsAt: e.startsAt.toISOString(),
+-      address: e.address,
+-      mapUrl: e.mapUrl,
+-      description: e.description,
+-    })),
+-    gallery: gallery.map((g) => ({ id: g.id, url: mediaUrl(g.id), caption: g.caption })),
+-    wishes: w.wishes.map((wi) => ({
+-      guestName: wi.guestName,
+-      content: wi.content,
+-      createdAt: wi.createdAt.toISOString(),
+-    })),
+-    visibility: {
+-      countdown: w.showCountdown,
+-      story: w.showStory,
+-      gallery: w.showGallery,
+-      rsvp: w.showRsvp,
+-      wishes: w.showWishes,
+-      gift: w.showGift,
+-      music: w.showMusic,
+-    },
+-  };
+-}
+diff --git a/tailwind.config.ts.new b/tailwind.config.ts.new
+deleted file mode 100644
+index 1aa7233..0000000
+--- a/tailwind.config.ts.new
++++ /dev/null
+@@ -1,46 +0,0 @@
+-import type { Config } from "tailwindcss";
+-
+-const config: Config = {
+-  content: ["./src/**/*.{ts,tsx}"],
+-  theme: {
+-    extend: {
+-      colors: {
+-        ivory: "#FBF7F0",
+-        cream: "#F4ECDD",
+-        paper: "#FFFDF9",
+-        gold: {
+-          DEFAULT: "#B8935A",
+-          light: "#C9A96A",
+-          deep: "#8A6D3B",
+-          soft: "#E6D3AC",
+-        },
+-        rose: {
+-          DEFAULT: "#A8324A",
+-          soft: "#C97A88",
+-        },
+-        ink: "#3A322A",
+-        muted: "#8B8177",
+-        sage: "#7C8B6F",
+-      },
+-      fontFamily: {
+-        serif: ["var(--font-playfair)", "serif"],
+-        script: ["var(--font-dancing)", "cursive"],
+-        cormorant: ["var(--font-cormorant)", "serif"],
+-        sans: ["var(--font-be-vietnam)", "system-ui", "sans-serif"],
+-      },
+-      boxShadow: {
+-        soft: "0 18px 50px -20px rgba(58,50,42,.35)",
+-        "soft-sm": "0 8px 24px -12px rgba(58,50,42,.30)",
+-      },
+-      transitionTimingFunction: {
+-        smooth: "cubic-bezier(.22,1,.36,1)",
+-      },
+-      animation: {
+-        "spin-slow": "spin 3s linear infinite",
+-      },
+-    },
+-  },
+-  plugins: [],
+-};
+-
+-export default config;
+-- 
+2.39.5
+
