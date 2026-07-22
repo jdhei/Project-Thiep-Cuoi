@@ -71,6 +71,14 @@ export default async function WeddingPage({ params, searchParams }: Params) {
       {dto.events.length > 0 && (
         <SectionShell kick="Lịch trình" title="Sự kiện">
           <EventTimeline events={dto.events} />
+          <div className="mt-6 text-center">
+            <a
+              href={`/api/calendar/${params.slug}`}
+              className="inline-block rounded-full border border-gold-soft/60 px-5 py-2 text-sm font-medium text-gold-deep transition-colors hover:bg-gold-soft/20"
+            >
+              📅 Thêm vào lịch
+            </a>
+          </div>
         </SectionShell>
       )}
 

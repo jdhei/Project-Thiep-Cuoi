@@ -52,6 +52,47 @@ export default async function PublishPage({ params }: { params: { id: string } }
         canPublish={validation.valid}
         errors={validation.errors}
       />
+
+      {/* UTIL-01/02/03: Tiện ích chia sẻ (chỉ khi đã xuất bản) */}
+      {wedding.status === "PUBLISHED" && (
+        <section className="rounded-xl bg-white p-6 shadow-sm border">
+          <h3 className="mb-4 text-lg font-semibold text-gray-800">Tiện ích chia sẻ</h3>
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+            <div className="text-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/qr/${wedding.slug}`}
+                alt="QR link thiệp"
+                width={160}
+                height={160}
+                className="rounded-lg border"
+              />
+              <p className="mt-1 text-xs text-gray-500">Quét để mở thiệp</p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <a
+                href={`/api/qr/${wedding.slug}`}
+                download={`qr-${wedding.slug}.png`}
+                className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+              >
+                ⬇ Tải mã QR (PNG)
+              </a>
+              <a
+                href={`/api/exports/weddings/${params.id}/rsvps`}
+                className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+              >
+                ⬇ Xuất danh sách RSVP (CSV)
+              </a>
+              <a
+                href={`/api/calendar/${wedding.slug}`}
+                className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+              >
+                ⬇ Tải lịch sự kiện (.ics)
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

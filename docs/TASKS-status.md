@@ -161,16 +161,16 @@
 
 ---
 
-## UTIL — Hoàn thiện (Giai đoạn 8)  ⬜
+## UTIL — Hoàn thiện (Giai đoạn 8)  ✅
 
 | Mã | Việc | TT |
 |----|------|----|
-| UTIL-01 | `GET /api/exports/weddings/[id]/rsvps` CSV UTF-8 | ⬜ |
-| UTIL-02 | `GET /api/calendar/[slug]` file `.ics` | ⬜ |
-| UTIL-03 | QR code link thiệp | ⬜ |
-| UTIL-04 | Metadata chia sẻ / OG image | ⬜ |
-| UTIL-05 | Rà soát security toàn bộ | ⬜ |
-| UTIL-06 | E2E regression toàn luồng | ⬜ |
+| UTIL-01 | `GET /api/exports/weddings/[id]/rsvps` CSV UTF-8 | ✅ |
+| UTIL-02 | `GET /api/calendar/[slug]` file `.ics` | ✅ |
+| UTIL-03 | QR code link thiệp | ✅ |
+| UTIL-04 | Metadata chia sẻ / OG image | ✅ |
+| UTIL-05 | Rà soát security toàn bộ | ✅ |
+| UTIL-06 | E2E regression toàn luồng | ✅ |
 
 ---
 
@@ -189,7 +189,7 @@
 | Mã | Việc | TT |
 |----|------|----|
 | TEST-E1 | Luồng admin: login→tạo→publish→xem RSVP | ⬜ |
-| TEST-E2 | Luồng khách: mở thiệp→RSVP→lời chúc | ⬜ |
+| TEST-E2 | Luồng khách: mở thiệp→RSVP→lời chúc | ✅ |
 | TEST-M1 | Điện thoại thật (Android Chrome / iPhone Safari), mạng chậm, bàn phím mở form | ⬜ |
 
 ---
@@ -208,6 +208,6 @@
 | MED Media | 7 | 7 | 100% |
 | RSVP | 8 | 8 | 100% |
 | GUEST | 4 | 4 | 100% |
-| UTIL | 0 | 6 | 0% |
-| TEST | 4 | 8 | 50% |
-| **Tổng** | **77** | **87** | **89%** |
+| UTIL | 6 | 6 | 100% |
+| TEST | 5 | 8 | 63% |
+| **Tổng** | **84** | **87** | **97%** |
