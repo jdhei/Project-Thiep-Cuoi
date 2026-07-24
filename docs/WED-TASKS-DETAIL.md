@@ -112,7 +112,7 @@
 | 05b | **Unarchive action** | Server Action `unarchiveWeddingAction(id)` — set status → `DRAFT` (về draft để review lại trước khi publish). |
 | 05c | **Confirm dialog** | Modal xác nhận trước khi archive: "Thiệp sẽ không còn hiển thị công khai. Bạn có chắc?" |
 | 05d | **UI trong danh sách** | Nút Archive (cho DRAFT/PUBLISHED) và Unarchive (cho ARCHIVED) trong action column. |
-| 05e | **Filter danh sách** | Tabs hoặc dropdown lọc theo trạng thái: Tất cả / Draft / Published / Archived. |
+| 05e | **Filter danh sách** | Tabs hoặc dropdown lọc theo trạng thái: Tất cả / Draft / Published / Archived. *(✅ hoàn thành 2026-07-24 — FIX-08, tab kèm số đếm qua `?status=`)* |
 
 ### Acceptance Criteria
 - [ ] Archive PUBLISHED wedding → status = ARCHIVED, `/w/[slug]` trả 404

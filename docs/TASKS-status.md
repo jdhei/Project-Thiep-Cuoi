@@ -209,10 +209,10 @@
 | FIX-06 | Rate-limit public theo `ipHash`: RSVP 10 & wish 5 / 10 phút / thiệp (in-memory, best-effort) | ✅ |
 | FIX-07 | Nhóm nhỏ: `giftData` parse an toàn; `invitationCode` dùng CSPRNG; cookie logout thêm `Secure`; `/api/qr` không phản chiếu `?guest=` tuỳ ý; xoá component thừa | ✅ |
 | DOCS-01 | Đồng bộ SPEC/SECURITY-REVIEW/DECISIONS/TASKS theo code (submissionKey server-side, giới hạn wish, từ cấm slug, ADR-001) + thêm `CLAUDE.md` vào repo | ✅ |
-| FIX-08 | Lọc danh sách wedding theo trạng thái ở `/admin/weddings` (WED-TASKS-DETAIL 05e — khai ✅ nhưng chưa làm) | ⬜ |
-| FIX-09 | Nút tải QR cá nhân (`?guest=CODE`) cho từng khách ở trang Guests | ⬜ |
-| FIX-10 | OG image dùng ảnh cover thật thay vì gradient | ⬜ |
-| FIX-11 | File `.ics` thêm `VTIMEZONE` (Asia/Ho_Chi_Minh) thay vì UTC | ⬜ |
+| FIX-08 | Lọc danh sách wedding theo trạng thái ở `/admin/weddings`: tab Tất cả/Nháp/Đã xuất bản/Lưu trữ kèm số đếm (WED-TASKS-DETAIL 05e) | ✅ |
+| FIX-09 | Nút "Tải QR" cá nhân (`?guest=CODE`) cho từng khách ở trang Guests | ✅ |
+| FIX-10 | OG image dùng ảnh cover thật (WeddingMedia type=cover, data URI + lớp phủ tối); fallback gradient khi chưa có cover | ✅ |
+| FIX-11 | File `.ics` dùng giờ địa phương + `TZID=Asia/Ho_Chi_Minh` kèm block `VTIMEZONE` (util `src/lib/utils/ics.ts` + unit test) | ✅ |
 | FIX-12 | Seed sinh `invitationCode` hex chữ thường — lookup luôn `toUpperCase()` nên link cá nhân guest demo không bao giờ khớp → dùng chung `generateInvitationCode` | ✅ |
 | FIX-13 | `GuestForm` label không gắn `htmlFor`/`id` (vi phạm a11y, E2E `getByLabel` fail) → thêm `useId` + htmlFor; sửa 2 locator `.or()` mơ hồ trong `e2e/auth.spec.ts` | ✅ |
 
@@ -237,5 +237,5 @@
 | GUEST | 4 | 4 | 100% |
 | UTIL | 6 | 6 | 100% |
 | TEST | 7 | 8 | 88% |
-| FIX Audit & Hardening | 10 | 14 | 71% |
-| **Tổng** | **96** | **101** | **95%** |
+| FIX Audit & Hardening | 14 | 14 | 100% |
+| **Tổng** | **100** | **101** | **99%** |
