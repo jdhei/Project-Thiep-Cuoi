@@ -6,12 +6,11 @@ import { join } from "path";
 import { requireAdminSession } from "@/lib/auth/require-admin";
 import { db } from "@/lib/db";
 import { getEnv } from "@/lib/env";
+import { deleteObjects, isObjectStorageConfigured } from "@/lib/storage";
 
 type ActionResult =
   | { success: true }
   | { success: false; error: string };
-
-// ─── Delete Media ────────────────────────────────────────────────────
 
 export async function deleteMediaAction(
   weddingId: string,
@@ -24,22 +23,22 @@ export async function deleteMediaAction(
   });
   if (!media) return { success: false, error: "Không tìm thấy file" };
 
-  // Delete DB record
+  // Xóa DB trước để media không còn được tham chiếu. Object cleanup có thể retry sau.
   await db.weddingMedia.delete({ where: { id: mediaId } });
 
-  // Delete file from disk
   try {
-    const env = getEnv();
-    await unlink(join(env.UPLOAD_ROOT, media.path));
-  } catch {
-    // File may already be gone — not critical
+    if (isObjectStorageConfigured()) {
+      await deleteObjects([media.path]);
+    } else if (getEnv().NODE_ENV !== "production") {
+      await unlink(join(getEnv().UPLOAD_ROOT, media.path));
+    }
+  } catch (error) {
+    console.error("Media cleanup error:", error);
   }
 
   revalidatePath(`/admin/weddings/${weddingId}`);
   return { success: true };
 }
-
-// ─── Update Media Caption ───────────────────────────────────────────
 
 export async function updateMediaCaptionAction(
   weddingId: string,
@@ -62,15 +61,12 @@ export async function updateMediaCaptionAction(
   return { success: true };
 }
 
-// ─── Reorder Gallery ────────────────────────────────────────────────
-
 export async function reorderGalleryAction(
   weddingId: string,
   mediaIds: string[],
 ): Promise<ActionResult> {
   await requireAdminSession();
 
-  // Verify all media belong to this wedding
   const items = await db.weddingMedia.findMany({
     where: { weddingId, type: "gallery", id: { in: mediaIds } },
     select: { id: true },
