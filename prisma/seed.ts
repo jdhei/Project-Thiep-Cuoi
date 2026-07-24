@@ -3,12 +3,17 @@
  * Chạy: npm run db:seed
  */
 import { PrismaClient } from "@prisma/client";
-import { randomBytes } from "node:crypto";
+import { generateInvitationCode } from "../src/features/weddings/guest.schemas";
 
 const db = new PrismaClient();
 
+/**
+ * FIX-12: dùng chung generateInvitationCode (uppercase, CSPRNG) thay cho
+ * randomBytes hex thường — lookup mã mời luôn toUpperCase() nên mã seed
+ * chữ thường trước đây không bao giờ khớp (link cá nhân của guest demo hỏng).
+ */
 function code(): string {
-  return randomBytes(4).toString("hex");
+  return generateInvitationCode();
 }
 
 async function main() {
