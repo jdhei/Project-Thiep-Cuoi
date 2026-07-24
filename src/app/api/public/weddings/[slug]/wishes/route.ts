@@ -2,13 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { db } from "@/lib/db";
 import { getEnv } from "@/lib/env";
+import { checkWindowLimit } from "@/lib/auth/rate-limit";
 import { wishSubmissionSchema } from "@/features/weddings/rsvp.schemas";
+
+/** FIX-06: tối đa 5 lời chúc / 10 phút / IP / thiệp (best-effort, in-memory). */
+const WISH_RATE_MAX = 5;
+const WISH_RATE_WINDOW_MS = 10 * 60 * 1000;
 
 /**
  * POST /api/public/weddings/[slug]/wishes
  *
  * RSVP-05: Validate, filter control chars, create PENDING wish.
  * RSVP-06: Public chỉ hiển thị wish APPROVED (đã handle ở DTO query).
+ * FIX-06: Rate-limit theo ipHash — mỗi POST tạo 1 wish PENDING nên cần
+ * hàng rào chống flood DB.
  */
 export async function POST(
   request: NextRequest,
@@ -43,6 +50,14 @@ export async function POST(
   const ipHash = createHash("sha256")
     .update(ip + env.IP_HASH_SECRET)
     .digest("hex");
+
+  // FIX-06: chặn flood theo IP (hash) trên từng thiệp
+  if (!checkWindowLimit(`wish:${wedding.id}:${ipHash}`, WISH_RATE_MAX, WISH_RATE_WINDOW_MS)) {
+    return NextResponse.json(
+      { error: "Bạn gửi lời chúc quá nhanh. Vui lòng thử lại sau ít phút." },
+      { status: 429 },
+    );
+  }
 
   const wish = await db.wish.create({
     data: {

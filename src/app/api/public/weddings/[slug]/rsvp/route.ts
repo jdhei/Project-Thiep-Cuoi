@@ -2,13 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { db } from "@/lib/db";
 import { getEnv } from "@/lib/env";
+import { checkWindowLimit } from "@/lib/auth/rate-limit";
 import { rsvpSubmissionSchema } from "@/features/weddings/rsvp.schemas";
+
+/** FIX-06: tối đa 10 lần gửi RSVP / 10 phút / IP / thiệp (best-effort, in-memory). */
+const RSVP_RATE_MAX = 10;
+const RSVP_RATE_WINDOW_MS = 10 * 60 * 1000;
 
 /**
  * POST /api/public/weddings/[slug]/rsvp
  *
  * RSVP-02: Idempotent submission via submissionKey.
  * RSVP-03: Hash IP with SHA-256 + IP_HASH_SECRET.
+ * FIX-04: Mã mời sai → 400 (không âm thầm bỏ qua giới hạn khách mời).
+ * FIX-06: Rate-limit theo ipHash.
  */
 export async function POST(
   request: NextRequest,
@@ -40,23 +47,29 @@ export async function POST(
   const { fullName, phone, attendance, numberOfPeople, message, invitationCode } =
     parsed.data;
 
-  // GUEST-03/04: Nếu có mã mời hợp lệ → liên kết guest & giới hạn số người.
+  // GUEST-03/04: Nếu có mã mời → mã PHẢI hợp lệ; liên kết guest & giới hạn số người.
   let guestId: string | null = null;
   if (invitationCode) {
     const guest = await db.guest.findFirst({
       where: { weddingId: wedding.id, invitationCode: invitationCode.toUpperCase() },
       select: { id: true, maximumPeople: true },
     });
-    if (guest) {
-      guestId = guest.id;
-      if (numberOfPeople > guest.maximumPeople) {
-        return NextResponse.json(
-          {
-            error: `Số người vượt quá giới hạn cho phép (tối đa ${guest.maximumPeople})`,
-          },
-          { status: 400 },
-        );
-      }
+    // FIX-04: trước đây mã sai bị bỏ qua thầm lặng → RSVP như khách vãng lai
+    // (lách được giới hạn maximumPeople). Giờ trả lỗi rõ ràng.
+    if (!guest) {
+      return NextResponse.json(
+        { error: "Mã mời không hợp lệ. Vui lòng kiểm tra lại đường link trong thư mời." },
+        { status: 400 },
+      );
+    }
+    guestId = guest.id;
+    if (numberOfPeople > guest.maximumPeople) {
+      return NextResponse.json(
+        {
+          error: `Số người vượt quá giới hạn cho phép (tối đa ${guest.maximumPeople})`,
+        },
+        { status: 400 },
+      );
     }
   }
 
@@ -66,6 +79,14 @@ export async function POST(
   const ipHash = createHash("sha256")
     .update(ip + env.IP_HASH_SECRET)
     .digest("hex");
+
+  // FIX-06: chặn flood theo IP (hash) trên từng thiệp
+  if (!checkWindowLimit(`rsvp:${wedding.id}:${ipHash}`, RSVP_RATE_MAX, RSVP_RATE_WINDOW_MS)) {
+    return NextResponse.json(
+      { error: "Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút." },
+      { status: 429 },
+    );
+  }
 
   // Generate submissionKey: hash of weddingId + fullName (lowercase) + ipHash
   const submissionKey = createHash("sha256")
