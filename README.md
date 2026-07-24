@@ -37,7 +37,7 @@ prisma/
 ├─ schema.prisma                 # PostgreSQL schema
 └─ seed.ts                       # Seed data demo "Quân & Linh"
 
-# Prototype tĩnh (giữ nguyên, xem PROTOTYPE.md)
+# Prototype tĩnh (giữ nguyên — tham chiếu thiết kế/animation cho template React)
 index.html, css/, js/
 ```
 
@@ -81,7 +81,7 @@ npm run dev
 - ✅ Prototype UI/UX, Setup, Database, Deploy (Vercel + Supabase)
 - ✅ Admin Auth (login/logout/session/rate-limit/E2E)
 - ✅ Wedding CRUD (danh sách/tạo/sửa/archive/preview/publish)
-- ✅ Cloudflare Zero Trust (bảo vệ /admin/* và /preview/*)
+- ✅ Bảo vệ khu vực admin: middleware verify JWT `admin_session` (+ Cloudflare Zero Trust tuỳ chọn)
 - ✅ Template Public (visibility check, gallery, RSVP, gift, responsive)
 - ✅ Events & Media (CRUD sự kiện, upload, gallery, music player)
 - ✅ RSVP & Wishes (form khách, idempotent, hash IP, duyệt lời chúc)

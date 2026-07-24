@@ -1,6 +1,6 @@
 # SPEC — Dịch vụ Thiệp Cưới Online (Thiệp Ước)
 
-> Đặc tả sản phẩm. Nguồn tham chiếu: `Workflow_MVP_Dich_Vu_Thiep_Cuoi_Online.docx` (repo `jdhei/thiepcuoi`).
+> Đặc tả sản phẩm. Nguồn tham chiếu: `docs/Workflow_MVP_Dich_Vu_Thiep_Cuoi_Online.docx`.
 > Phiên bản: 1.3 · Cập nhật: 2026-07-24 (đồng bộ theo code sau đợt audit — code là nguồn sự thật)
 > **Repo chính:** `jdhei/Project-Thiep-Cuoi` | **Live:** https://thiepcuoi-five.vercel.app
 
@@ -61,8 +61,8 @@ index.html          # landing + overlay thiệp mẫu
 css/{base,landing,invite}.css
 js/{ui,invite}.js
 ```
-Prototype này là **đầu vào thiết kế** cho template `classic-gold` khi lên Next.js.
-Xem `PROTOTYPE.md`.
+Prototype này là **đầu vào thiết kế** cho template `classic-gold` khi lên Next.js
+(các file nằm ở gốc repo, xem thêm ADR-004).
 
 ### 3.3 Sơ đồ request
 ```

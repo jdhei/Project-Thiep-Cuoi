@@ -24,7 +24,7 @@ ràng buộc kỹ thuật.
 
 ## ADR-004: Giữ prototype ở gốc repo (không xoá)
 Theo yêu cầu "không xoá prototype cũ". Prototype gồm `index.html`, `css/`, `js/` ở gốc
-(mô tả trong `PROTOTYPE.md`). Các file này không phải `.ts/.tsx` và `eslint` chỉ quét
+repo. Các file này không phải `.ts/.tsx` và `eslint` chỉ quét
 `src/` nên không ảnh hưởng typecheck/lint của app.
 
 ## ADR-005: Vị trí build & push
