@@ -12,7 +12,7 @@ function makeWedding(overrides: Record<string, unknown> = {}) {
     title: "Wedding",
     introduction: null,
     loveStory: null,
-    coverPath: "/uploads/cover.jpg",
+    coverPath: null,
     musicPath: null,
     primaryColor: "#8A6D3B",
     showCountdown: true,
@@ -35,6 +35,19 @@ function makeWedding(overrides: Record<string, unknown> = {}) {
         mapUrl: null,
         description: null,
         sortOrder: 0,
+      },
+    ],
+    media: [
+      {
+        id: "media1",
+        weddingId: "cuid1",
+        type: "cover",
+        path: "weddings/cuid1/cover/test.jpg",
+        mimeType: "image/jpeg",
+        sizeBytes: 100,
+        caption: null,
+        sortOrder: 0,
+        createdAt: new Date(),
       },
     ],
     ...overrides,
@@ -61,8 +74,8 @@ describe("validatePublishReady", () => {
     expect(result.errors).toContain("Cần ít nhất 1 sự kiện");
   });
 
-  it("fails when no cover", () => {
-    const result = validatePublishReady(makeWedding({ coverPath: null }));
+  it("fails when no cover media exists", () => {
+    const result = validatePublishReady(makeWedding({ media: [] }));
     expect(result.valid).toBe(false);
     expect(result.errors).toContain("Cần ảnh bìa (cover)");
   });
@@ -75,7 +88,7 @@ describe("validatePublishReady", () => {
 
   it("collects multiple errors", () => {
     const result = validatePublishReady(
-      makeWedding({ weddingDate: null, events: [], coverPath: null }),
+      makeWedding({ weddingDate: null, events: [], media: [] }),
     );
     expect(result.valid).toBe(false);
     expect(result.errors).toHaveLength(3);
