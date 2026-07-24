@@ -14,7 +14,7 @@ export async function GET(
 ) {
   const wedding = await db.wedding.findFirst({
     where: { slug: params.slug, status: "PUBLISHED" },
-    select: { slug: true },
+    select: { id: true, slug: true },
   });
 
   if (!wedding) {
@@ -23,11 +23,23 @@ export async function GET(
 
   const env = getEnv();
   const { searchParams } = new URL(request.url);
-  const guest = searchParams.get("guest")?.trim();
+  const rawGuestCode = searchParams.get("guest")?.trim().toUpperCase();
+
+  // FIX-07: chỉ nhúng ?guest= khi mã mời tồn tại thật cho thiệp này —
+  // không phản chiếu input tuỳ ý của người dùng vào QR (tránh sinh QR rác
+  // được cache public).
+  let guestCode: string | null = null;
+  if (rawGuestCode) {
+    const guest = await db.guest.findFirst({
+      where: { weddingId: wedding.id, invitationCode: rawGuestCode },
+      select: { invitationCode: true },
+    });
+    guestCode = guest?.invitationCode ?? null;
+  }
 
   const base = env.APP_URL.replace(/\/$/, "");
-  const target = guest
-    ? `${base}/w/${wedding.slug}?guest=${encodeURIComponent(guest.toUpperCase())}`
+  const target = guestCode
+    ? `${base}/w/${wedding.slug}?guest=${encodeURIComponent(guestCode)}`
     : `${base}/w/${wedding.slug}`;
 
   const png = await QRCode.toBuffer(target, {

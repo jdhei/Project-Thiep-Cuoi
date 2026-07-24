@@ -43,8 +43,26 @@ export type PublicWeddingDto = {
 };
 
 function mediaUrl(id: string): string {
+  // Đọc trực tiếp process.env (không qua getEnv) có chủ đích: module này được
+  // unit-test độc lập, không cần nạp toàn bộ env schema.
   const base = process.env.MEDIA_BASE_URL;
   return base ? `${base}/${id}` : `/media/${id}`;
+}
+
+/**
+ * FIX-07: Parse giftData an toàn. Admin action đã validate JSON khi lưu,
+ * nhưng dữ liệu seed/nhập tay vào DB có thể hỏng — không để một chuỗi JSON
+ * lỗi làm sập cả trang thiệp public.
+ */
+function safeParseGiftData(raw: string): Record<string, unknown> | null {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Chuyển Prisma model (đã include events/media/wishes) thành DTO an toàn cho public. */
@@ -63,9 +81,7 @@ export function toPublicWeddingDto(w: PublishedWedding): PublicWeddingDto {
     coverUrl: cover ? mediaUrl(cover.id) : null,
     musicUrl: w.showMusic && music ? mediaUrl(music.id) : null,
     primaryColor: w.primaryColor ?? "#8A6D3B",
-    giftData: w.showGift && w.giftData
-      ? (JSON.parse(w.giftData) as Record<string, unknown>)
-      : null,
+    giftData: w.showGift && w.giftData ? safeParseGiftData(w.giftData) : null,
     events: w.events.map((e) => ({
       id: e.id,
       title: e.title,

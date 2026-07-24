@@ -119,16 +119,6 @@ export function Gallery({ items }: { items: PublicGalleryItem[] }) {
   );
 }
 
-export function RsvpPlaceholder() {
-  return (
-    <div className="mx-auto max-w-md rounded-2xl border border-gold-soft/40 bg-paper p-6 text-center shadow-soft-sm">
-      <p className="font-cormorant text-[1.1rem] text-muted">
-        Chức năng xác nhận tham dự sẽ sớm được cập nhật.
-      </p>
-    </div>
-  );
-}
-
 export function GiftSection({ giftData }: { giftData: Record<string, unknown> | null }) {
   if (!giftData) {
     return <p className="text-muted">Chưa có thông tin mừng cưới.</p>;
