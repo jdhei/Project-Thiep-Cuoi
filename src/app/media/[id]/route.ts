@@ -3,13 +3,13 @@ import { readFile, stat } from "fs/promises";
 import { join } from "path";
 import { db } from "@/lib/db";
 import { getEnv } from "@/lib/env";
+import { createSignedObjectUrl, isObjectStorageConfigured } from "@/lib/storage";
 
 /**
  * GET /media/[id]
  *
- * Serve uploaded files by WeddingMedia ID.
- * Public endpoint — no auth needed (files are part of published wedding).
- * Caches for 1 year (immutable UUID filenames).
+ * Media của thiệp public chỉ được truy cập khi wedding đã PUBLISHED.
+ * Admin/preview vẫn có thể xem media khi có admin session thông qua các route riêng.
  */
 export async function GET(
   _request: NextRequest,
@@ -17,28 +17,44 @@ export async function GET(
 ) {
   const media = await db.weddingMedia.findUnique({
     where: { id: params.id },
-    select: { path: true, mimeType: true },
+    select: {
+      path: true,
+      mimeType: true,
+      wedding: { select: { status: true } },
+    },
   });
 
-  if (!media) {
+  if (!media || media.wedding.status !== "PUBLISHED") {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const env = getEnv();
-  const filePath = join(env.UPLOAD_ROOT, media.path);
+  if (isObjectStorageConfigured()) {
+    try {
+      const signedUrl = await createSignedObjectUrl(media.path, 3600);
+      return NextResponse.redirect(signedUrl, {
+        status: 307,
+        headers: { "Cache-Control": "private, max-age=300" },
+      });
+    } catch (error) {
+      console.error("Signed media URL error:", error);
+      return new NextResponse("File not found", { status: 404 });
+    }
+  }
 
+  // Fallback cho dữ liệu local cũ khi chạy development.
+  if (getEnv().NODE_ENV === "production") {
+    return new NextResponse("Storage unavailable", { status: 503 });
+  }
+
+  const filePath = join(getEnv().UPLOAD_ROOT, media.path);
   try {
-    const [fileBuffer, fileStat] = await Promise.all([
-      readFile(filePath),
-      stat(filePath),
-    ]);
-
+    const [fileBuffer, fileStat] = await Promise.all([readFile(filePath), stat(filePath)]);
     return new NextResponse(fileBuffer, {
       status: 200,
       headers: {
         "Content-Type": media.mimeType,
         "Content-Length": String(fileStat.size),
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "public, max-age=3600",
       },
     });
   } catch {
