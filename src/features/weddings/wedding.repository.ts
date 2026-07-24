@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
+import type { WeddingStatus } from "@/lib/domain";
 
 /**
  * Data-access cho Wedding. Component/UI KHÔNG gọi Prisma trực tiếp — dùng qua đây.
@@ -32,8 +33,18 @@ export function findWeddingById(id: string) {
   });
 }
 
-export function listWeddings() {
-  return db.wedding.findMany({ orderBy: { updatedAt: "desc" } });
+/** FIX-08: hỗ trợ lọc theo trạng thái (WED-TASKS-DETAIL 05e). */
+export function listWeddings(status?: WeddingStatus) {
+  return db.wedding.findMany({
+    where: status ? { status } : undefined,
+    orderBy: { updatedAt: "desc" },
+  });
+}
+
+/** FIX-08: đếm thiệp theo từng trạng thái (badge trên tab lọc). */
+export async function countWeddingsByStatus(): Promise<Record<string, number>> {
+  const groups = await db.wedding.groupBy({ by: ["status"], _count: { _all: true } });
+  return Object.fromEntries(groups.map((g) => [g.status, g._count._all]));
 }
 
 export function createWedding(data: Prisma.WeddingCreateInput) {
