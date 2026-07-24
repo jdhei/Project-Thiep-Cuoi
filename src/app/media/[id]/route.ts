@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFile, stat } from "fs/promises";
 import { join } from "path";
+import { getAdminSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { getEnv } from "@/lib/env";
 import { createSignedObjectUrl, isObjectStorageConfigured } from "@/lib/storage";
@@ -9,7 +10,7 @@ import { createSignedObjectUrl, isObjectStorageConfigured } from "@/lib/storage"
  * GET /media/[id]
  *
  * Media của thiệp public chỉ được truy cập khi wedding đã PUBLISHED.
- * Admin/preview vẫn có thể xem media khi có admin session thông qua các route riêng.
+ * Admin đã đăng nhập vẫn xem được media của draft/preview.
  */
 export async function GET(
   _request: NextRequest,
@@ -24,7 +25,11 @@ export async function GET(
     },
   });
 
-  if (!media || media.wedding.status !== "PUBLISHED") {
+  if (!media) {
+    return new NextResponse("Not found", { status: 404 });
+  }
+
+  if (media.wedding.status !== "PUBLISHED" && !(await getAdminSession())) {
     return new NextResponse("Not found", { status: 404 });
   }
 
