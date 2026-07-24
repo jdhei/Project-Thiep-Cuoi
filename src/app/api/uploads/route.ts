@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { mkdir, writeFile, unlink } from "fs/promises";
-import { join } from "path";
 import { getAdminSession } from "@/lib/auth/session";
-import { getEnv } from "@/lib/env";
 import { db } from "@/lib/db";
+import { deleteObjects, isObjectStorageConfigured, uploadObject } from "@/lib/storage";
 import {
   uploadQuerySchema,
   ALLOWED_MIME,
@@ -16,19 +14,22 @@ import {
 /**
  * POST /api/uploads
  *
- * Multipart upload: check admin → validate → write file → insert DB.
- * If DB insert fails → rollback (delete file).
- *
- * Query params: weddingId, type (cover|gallery|music|gift), caption?
+ * Upload file vào Supabase Storage, sau đó tạo WeddingMedia.
+ * Cover/music mới được tạo trước; bản cũ chỉ bị xóa sau khi DB update thành công.
  */
 export async function POST(request: NextRequest) {
-  // ─── Auth ────────────────────────────────────────────────────────
   const session = await getAdminSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // ─── Parse query ─────────────────────────────────────────────────
+  if (!isObjectStorageConfigured()) {
+    return NextResponse.json(
+      { error: "Supabase Storage chưa được cấu hình" },
+      { status: 503 },
+    );
+  }
+
   const { searchParams } = request.nextUrl;
   const query = uploadQuerySchema.safeParse({
     weddingId: searchParams.get("weddingId"),
@@ -44,8 +45,6 @@ export async function POST(request: NextRequest) {
   }
 
   const { weddingId, type, caption } = query.data;
-
-  // ─── Check wedding exists ────────────────────────────────────────
   const wedding = await db.wedding.findUnique({
     where: { id: weddingId },
     select: { id: true },
@@ -54,25 +53,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Không tìm thấy thiệp" }, { status: 404 });
   }
 
-  // ─── Read file from multipart ────────────────────────────────────
   const formData = await request.formData();
   const file = formData.get("file");
-
   if (!file || !(file instanceof File)) {
     return NextResponse.json({ error: "Thiếu file upload" }, { status: 400 });
   }
 
-  // ─── Validate MIME ───────────────────────────────────────────────
   const mimeType = file.type;
   const allowedMimes = ALLOWED_MIME[type as UploadType];
   if (!allowedMimes.includes(mimeType)) {
     return NextResponse.json(
-      { error: `MIME type "${mimeType}" không được phép cho ${type}. Cho phép: ${allowedMimes.join(", ")}` },
+      { error: `MIME type "${mimeType}" không được phép cho ${type}` },
       { status: 400 },
     );
   }
 
-  // ─── Validate size ──────────────────────────────────────────────
   const maxSize = MAX_SIZE[type as UploadType];
   if (file.size > maxSize) {
     return NextResponse.json(
@@ -81,7 +76,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // ─── Validate extension (chống extension kép) ───────────────────
   const originalName = file.name || "";
   const dotCount = (originalName.match(/\./g) || []).length;
   if (dotCount > 1) {
@@ -91,40 +85,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // ─── Generate UUID filename ─────────────────────────────────────
   const ext = MIME_TO_EXT[mimeType] ?? ".bin";
-  const uuid = randomUUID();
-  const filename = `${uuid}${ext}`;
+  const objectPath = `weddings/${weddingId}/${type}/${randomUUID()}${ext}`;
 
-  const env = getEnv();
-  const uploadDir = join(env.UPLOAD_ROOT, "weddings", weddingId, type);
-  const filePath = join(uploadDir, filename);
-  const relativePath = `weddings/${weddingId}/${type}/${filename}`;
-
-  // ─── Write file ─────────────────────────────────────────────────
-  await mkdir(uploadDir, { recursive: true });
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(filePath, buffer);
-
-  // ─── Insert DB (rollback file on error) ─────────────────────────
   try {
-    // For cover type: only one allowed, replace existing
-    if (type === "cover" || type === "music") {
-      const existing = await db.weddingMedia.findFirst({
-        where: { weddingId, type },
-      });
-      if (existing) {
-        // Delete old file
-        try {
-          await unlink(join(env.UPLOAD_ROOT, existing.path));
-        } catch {
-          // Old file may already be gone
-        }
-        await db.weddingMedia.delete({ where: { id: existing.id } });
-      }
-    }
+    await uploadObject(objectPath, await file.arrayBuffer(), mimeType);
 
-    // Auto sortOrder for gallery
+    const existing =
+      type === "cover" || type === "music"
+        ? await db.weddingMedia.findFirst({ where: { weddingId, type } })
+        : null;
+
     let sortOrder = 0;
     if (type === "gallery") {
       const maxSort = await db.weddingMedia.aggregate({
@@ -134,17 +105,31 @@ export async function POST(request: NextRequest) {
       sortOrder = (maxSort._max.sortOrder ?? -1) + 1;
     }
 
-    const media = await db.weddingMedia.create({
-      data: {
-        weddingId,
-        type,
-        path: relativePath,
-        mimeType,
-        sizeBytes: file.size,
-        caption: caption || null,
-        sortOrder,
-      },
+    const media = await db.$transaction(async (tx) => {
+      const created = await tx.weddingMedia.create({
+        data: {
+          weddingId,
+          type,
+          path: objectPath,
+          mimeType,
+          sizeBytes: file.size,
+          caption: caption || null,
+          sortOrder,
+        },
+      });
+
+      if (existing) {
+        await tx.weddingMedia.delete({ where: { id: existing.id } });
+      }
+
+      return created;
     });
+
+    if (existing) {
+      await deleteObjects([existing.path]).catch((error) => {
+        console.error("Không xóa được object cũ:", error);
+      });
+    }
 
     return NextResponse.json({
       id: media.id,
@@ -153,17 +138,9 @@ export async function POST(request: NextRequest) {
       mimeType,
       sizeBytes: media.sizeBytes,
     });
-  } catch (err) {
-    // MED-04: Rollback — delete file if DB insert fails
-    try {
-      await unlink(filePath);
-    } catch {
-      // File may not exist
-    }
-    console.error("Upload DB error:", err);
-    return NextResponse.json(
-      { error: "Lỗi lưu thông tin file" },
-      { status: 500 },
-    );
+  } catch (error) {
+    await deleteObjects([objectPath]).catch(() => undefined);
+    console.error("Upload error:", error);
+    return NextResponse.json({ error: "Lỗi lưu file" }, { status: 500 });
   }
 }
