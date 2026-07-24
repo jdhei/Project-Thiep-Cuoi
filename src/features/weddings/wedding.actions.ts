@@ -12,8 +12,6 @@ import {
 } from "./wedding.schemas";
 import { validatePublishReady } from "./wedding.validators";
 
-// ─── Helpers ─────────────────────────────────────────────────────────
-
 type ActionResult =
   | { success: true; id?: string }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> };
@@ -24,8 +22,6 @@ async function checkSlugUnique(slug: string, excludeId?: string): Promise<boolea
   if (excludeId && existing.id === excludeId) return true;
   return false;
 }
-
-// ─── Create Wedding ──────────────────────────────────────────────────
 
 export async function createWeddingAction(
   _prev: ActionResult | null,
@@ -66,8 +62,6 @@ export async function createWeddingAction(
   redirect(`/admin/weddings/${wedding.id}/content`);
 }
 
-// ─── Update Wedding Content ─────────────────────────────────────────
-
 export async function updateWeddingAction(
   weddingId: string,
   _prev: ActionResult | null,
@@ -103,7 +97,6 @@ export async function updateWeddingAction(
     };
   }
 
-  // Validate giftData is valid JSON if provided
   if (parsed.data.giftData) {
     try {
       JSON.parse(parsed.data.giftData);
@@ -140,21 +133,15 @@ export async function updateWeddingAction(
 
   revalidatePath(`/admin/weddings/${weddingId}/content`);
   revalidatePath("/admin/weddings");
-
   return { success: true, id: weddingId };
 }
 
-// ─── Archive / Unarchive ─────────────────────────────────────────────
-
 export async function archiveWeddingAction(weddingId: string): Promise<ActionResult> {
   await requireAdminSession();
-
   const wedding = await db.wedding.findUnique({ where: { id: weddingId }, select: { status: true, slug: true } });
   if (!wedding) return { success: false, error: "Không tìm thấy thiệp" };
   if (wedding.status === "ARCHIVED") return { success: false, error: "Thiệp đã ở trạng thái archived" };
-
   await db.wedding.update({ where: { id: weddingId }, data: { status: "ARCHIVED" } });
-
   revalidatePath("/admin/weddings");
   revalidatePath(`/w/${wedding.slug}`);
   return { success: true };
@@ -162,25 +149,20 @@ export async function archiveWeddingAction(weddingId: string): Promise<ActionRes
 
 export async function unarchiveWeddingAction(weddingId: string): Promise<ActionResult> {
   await requireAdminSession();
-
   const wedding = await db.wedding.findUnique({ where: { id: weddingId }, select: { status: true } });
   if (!wedding) return { success: false, error: "Không tìm thấy thiệp" };
   if (wedding.status !== "ARCHIVED") return { success: false, error: "Thiệp không ở trạng thái archived" };
-
   await db.wedding.update({ where: { id: weddingId }, data: { status: "DRAFT" } });
-
   revalidatePath("/admin/weddings");
   return { success: true };
 }
-
-// ─── Publish / Unpublish ─────────────────────────────────────────────
 
 export async function publishWeddingAction(weddingId: string): Promise<ActionResult & { errors?: string[] }> {
   await requireAdminSession();
 
   const wedding = await db.wedding.findUnique({
     where: { id: weddingId },
-    include: { events: true },
+    include: { events: true, media: true },
   });
   if (!wedding) return { success: false, error: "Không tìm thấy thiệp" };
 
@@ -190,7 +172,6 @@ export async function publishWeddingAction(weddingId: string): Promise<ActionRes
   }
 
   await db.wedding.update({ where: { id: weddingId }, data: { status: "PUBLISHED" } });
-
   revalidatePath("/admin/weddings");
   revalidatePath(`/w/${wedding.slug}`);
   revalidatePath(`/admin/weddings/${weddingId}/publish`);
@@ -199,13 +180,10 @@ export async function publishWeddingAction(weddingId: string): Promise<ActionRes
 
 export async function unpublishWeddingAction(weddingId: string): Promise<ActionResult> {
   await requireAdminSession();
-
   const wedding = await db.wedding.findUnique({ where: { id: weddingId }, select: { status: true, slug: true } });
   if (!wedding) return { success: false, error: "Không tìm thấy thiệp" };
   if (wedding.status !== "PUBLISHED") return { success: false, error: "Thiệp không ở trạng thái published" };
-
   await db.wedding.update({ where: { id: weddingId }, data: { status: "DRAFT" } });
-
   revalidatePath("/admin/weddings");
   revalidatePath(`/w/${wedding.slug}`);
   revalidatePath(`/admin/weddings/${weddingId}/publish`);
