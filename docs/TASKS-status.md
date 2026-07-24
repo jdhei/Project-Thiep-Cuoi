@@ -213,6 +213,8 @@
 | FIX-09 | Nút tải QR cá nhân (`?guest=CODE`) cho từng khách ở trang Guests | ⬜ |
 | FIX-10 | OG image dùng ảnh cover thật thay vì gradient | ⬜ |
 | FIX-11 | File `.ics` thêm `VTIMEZONE` (Asia/Ho_Chi_Minh) thay vì UTC | ⬜ |
+| FIX-12 | Seed sinh `invitationCode` hex chữ thường — lookup luôn `toUpperCase()` nên link cá nhân guest demo không bao giờ khớp → dùng chung `generateInvitationCode` | ✅ |
+| FIX-13 | `GuestForm` label không gắn `htmlFor`/`id` (vi phạm a11y, E2E `getByLabel` fail) → thêm `useId` + htmlFor; sửa 2 locator `.or()` mơ hồ trong `e2e/auth.spec.ts` | ✅ |
 
 > Ghi chú: hiệu ứng **mở phong bì + animation** của prototype chưa được port sang
 > template React — sẽ xử lý trong giai đoạn nâng cấp animation thiệp (không tính vào FIX).
@@ -235,5 +237,5 @@
 | GUEST | 4 | 4 | 100% |
 | UTIL | 6 | 6 | 100% |
 | TEST | 7 | 8 | 88% |
-| FIX Audit & Hardening | 8 | 12 | 67% |
-| **Tổng** | **94** | **99** | **95%** |
+| FIX Audit & Hardening | 10 | 14 | 71% |
+| **Tổng** | **96** | **101** | **95%** |
