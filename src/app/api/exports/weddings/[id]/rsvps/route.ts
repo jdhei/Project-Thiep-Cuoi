@@ -47,8 +47,20 @@ export async function GET(
     MAYBE: "Chưa chắc chắn",
   };
 
+  /**
+   * FIX-05: Escape CSV + chống formula injection.
+   * Excel/LibreOffice diễn giải ô bắt đầu bằng = @ (và + - trong một số
+   * phiên bản) là công thức → kẻ xấu có thể nhét "=cmd|..." vào tên/lời nhắn.
+   * Quy tắc: ô bắt đầu bằng = @ tab CR luôn được chèn dấu nháy đơn;
+   * ô bắt đầu bằng + hoặc - chỉ được chèn khi KHÔNG phải dạng số/điện thoại
+   * (để "+84 912..." không bị biến dạng).
+   */
   const esc = (v: unknown) => {
-    const s = v == null ? "" : String(v);
+    let s = v == null ? "" : String(v);
+    const phoneOrNumberLike = /^[+-][\d\s().-]*$/.test(s);
+    if (/^[=@\t\r]/.test(s) || (/^[+-]/.test(s) && !phoneOrNumberLike)) {
+      s = `'${s}`;
+    }
     return `"${s.replace(/"/g, '""')}"`;
   };
 
