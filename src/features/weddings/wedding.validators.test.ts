@@ -12,8 +12,9 @@ function makeWedding(overrides: Record<string, unknown> = {}) {
     title: "Wedding",
     introduction: null,
     loveStory: null,
-    coverPath: "/uploads/cover.jpg",
+    coverPath: null,
     musicPath: null,
+    media: [{ type: "cover" }],
     primaryColor: "#8A6D3B",
     showCountdown: true,
     showStory: true,
@@ -62,9 +63,23 @@ describe("validatePublishReady", () => {
   });
 
   it("fails when no cover", () => {
-    const result = validatePublishReady(makeWedding({ coverPath: null }));
+    const result = validatePublishReady(makeWedding({ coverPath: null, media: [] }));
     expect(result.valid).toBe(false);
     expect(result.errors).toContain("Cần ảnh bìa (cover)");
+  });
+
+  it("passes when cover exists as WeddingMedia (upload flow)", () => {
+    const result = validatePublishReady(
+      makeWedding({ coverPath: null, media: [{ type: "cover" }] }),
+    );
+    expect(result.valid).toBe(true);
+  });
+
+  it("passes when only legacy coverPath is set (backward compat)", () => {
+    const result = validatePublishReady(
+      makeWedding({ coverPath: "/uploads/cover.jpg", media: [] }),
+    );
+    expect(result.valid).toBe(true);
   });
 
   it("fails when status is ARCHIVED", () => {
@@ -75,7 +90,7 @@ describe("validatePublishReady", () => {
 
   it("collects multiple errors", () => {
     const result = validatePublishReady(
-      makeWedding({ weddingDate: null, events: [], coverPath: null }),
+      makeWedding({ weddingDate: null, events: [], coverPath: null, media: [] }),
     );
     expect(result.valid).toBe(false);
     expect(result.errors).toHaveLength(3);

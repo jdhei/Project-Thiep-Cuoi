@@ -78,7 +78,16 @@ export async function getAdminSession(): Promise<AdminSessionPayload | null> {
 // ─── Clear ───────────────────────────────────────────────────────────
 /**
  * Return a Set-Cookie header value that clears the session cookie.
+ * FIX-07: thêm `Secure` ở production cho nhất quán với cookie khi tạo.
  */
 export function clearSessionCookie(): string {
-  return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+  const parts = [
+    `${COOKIE_NAME}=`,
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax",
+    "Max-Age=0",
+  ];
+  if (getEnv().NODE_ENV === "production") parts.push("Secure");
+  return parts.join("; ");
 }

@@ -1,13 +1,21 @@
 /**
- * In-memory rate limiter for login attempts (per IP).
- * Limits: MAX_ATTEMPTS within WINDOW_MS. After that → 429.
- * Resets on successful login via `resetAttempts(ip)`.
+ * In-memory rate limiter (per key).
  *
- * For MVP — no Redis needed. State resets on server restart (acceptable).
+ * - `checkRateLimit(ip)`: giới hạn đăng nhập (5 lần / 15 phút / IP).
+ * - `checkWindowLimit(key, max, windowMs)`: giới hạn tuỳ biến cho các
+ *   endpoint public (RSVP, wishes) theo key bất kỳ (vd. `rsvp:{id}:{ipHash}`).
+ *
+ * GIỚI HẠN ĐÃ BIẾT (chấp nhận cho MVP): state nằm trong bộ nhớ tiến trình —
+ * trên môi trường serverless (Vercel) mỗi instance có Map riêng và reset khi
+ * cold start, nên đây chỉ là hàng rào best-effort. Muốn chặt chẽ ở production
+ * cần store dùng chung (Upstash Redis / Vercel KV). Xem docs/SECURITY-REVIEW.md.
  */
 
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+/** Chống Map phình vô hạn: dọn record hết hạn khi vượt ngưỡng. */
+const CLEANUP_THRESHOLD = 10_000;
 
 interface AttemptRecord {
   count: number;
@@ -15,6 +23,37 @@ interface AttemptRecord {
 }
 
 const attempts = new Map<string, AttemptRecord>();
+
+// ─── Generic window limiter (public endpoints) ───────────────────────
+
+const buckets = new Map<string, AttemptRecord & { windowMs: number }>();
+
+function cleanupBuckets(now: number): void {
+  if (buckets.size < CLEANUP_THRESHOLD) return;
+  for (const [key, record] of buckets) {
+    if (now - record.firstAttempt > record.windowMs) buckets.delete(key);
+  }
+}
+
+/**
+ * Giới hạn `max` lần trong cửa sổ `windowMs` cho một key bất kỳ.
+ * @returns `true` nếu được phép, `false` nếu đã vượt giới hạn.
+ */
+export function checkWindowLimit(key: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  cleanupBuckets(now);
+
+  const record = buckets.get(key);
+  if (!record || now - record.firstAttempt > windowMs) {
+    buckets.set(key, { count: 1, firstAttempt: now, windowMs });
+    return true;
+  }
+  if (record.count >= max) {
+    return false;
+  }
+  record.count += 1;
+  return true;
+}
 
 /**
  * Check if the IP is rate-limited. If not, increment the counter.

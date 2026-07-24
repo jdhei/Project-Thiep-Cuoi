@@ -1,4 +1,4 @@
-import type { Wedding, WeddingEvent } from "@prisma/client";
+import type { Wedding, WeddingEvent, WeddingMedia } from "@prisma/client";
 
 export interface PublishValidation {
   valid: boolean;
@@ -8,10 +8,17 @@ export interface PublishValidation {
 
 /**
  * Validate xem wedding có đủ điều kiện publish không.
- * Yêu cầu: weddingDate, ≥1 event, coverPath, không ARCHIVED.
+ * Yêu cầu: weddingDate, ≥1 event, có ảnh bìa, không ARCHIVED.
+ *
+ * Ảnh bìa được upload qua /api/uploads và lưu thành bản ghi WeddingMedia
+ * (type="cover") — đây là nguồn sự thật. `Wedding.coverPath` chỉ là trường
+ * legacy (seed/dữ liệu cũ) và được chấp nhận để tương thích ngược.
  */
 export function validatePublishReady(
-  wedding: Wedding & { events: WeddingEvent[] },
+  wedding: Wedding & {
+    events: WeddingEvent[];
+    media: Pick<WeddingMedia, "type">[];
+  },
 ): PublishValidation {
   const checks: { label: string; passed: boolean }[] = [];
   const errors: string[] = [];
@@ -31,8 +38,9 @@ export function validatePublishReady(
   checks.push({ label: "Có ít nhất 1 sự kiện", passed: hasEvents });
   if (!hasEvents) errors.push("Cần ít nhất 1 sự kiện");
 
-  // 4. Ảnh bìa
-  const hasCover = !!wedding.coverPath;
+  // 4. Ảnh bìa — ưu tiên WeddingMedia (luồng upload chuẩn), fallback coverPath (legacy)
+  const hasCover =
+    wedding.media.some((m) => m.type === "cover") || !!wedding.coverPath;
   checks.push({ label: "Đã có ảnh bìa", passed: hasCover });
   if (!hasCover) errors.push("Cần ảnh bìa (cover)");
 

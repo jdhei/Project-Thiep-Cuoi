@@ -3,7 +3,7 @@
 > Theo dõi từng đầu việc. Mã task dùng cho tên nhánh Git.
 > Trạng thái: ⬜ chưa làm · 🟡 đang làm · ✅ xong
 > Xem `PLAN.md` (giai đoạn) và `SPEC.md` (đặc tả).
-> Cập nhật: 2026-07-22
+> Cập nhật: 2026-07-24 (thêm nhóm FIX — audit & hardening)
 
 **Quy ước nhánh:** `feature/<MÃ>-mô-tả` · ví dụ `feature/AUTH-02-login`
 **Commit mẫu:** `feat(rsvp): add idempotent public submission`
@@ -31,7 +31,7 @@
 | SET-01 | `create-next-app` (TS, Tailwind, App Router, src-dir, import-alias) | ✅ |
 | SET-02 | Cài prisma, @prisma/client, zod, react-hook-form, @hookform/resolvers, bcryptjs, jose, date-fns, qrcode, lucide-react, clsx, tailwind-merge | ✅ |
 | SET-03 | Cài dev: vitest, @vitest/coverage-v8, @playwright/test, @types/bcryptjs, prettier | ✅ |
-| SET-04 | `.env.example` + `.env.local` (DATABASE_URL, DIRECT_URL, APP_URL, ADMIN_EMAIL, ADMIN_PASSWORD_HASH, SESSION_SECRET, UPLOAD_ROOT, IP_HASH_SECRET) | ✅ |
+| SET-04 | `.env.example` + `.env.local` (DATABASE_URL, DIRECT_URL, APP_URL, ADMIN_EMAIL, ADMIN_PASSWORD_HASH, SESSION_SECRET, UPLOAD_ROOT, MEDIA_BASE_URL, IP_HASH_SECRET, CF_ACCESS_* optional) | ✅ |
 | SET-05 | Scripts package.json (dev/build/start/lint/typecheck/db:*/test/test:e2e) | ✅ |
 | SET-06 | Cấu trúc thư mục theo SPEC §3 (app, features, templates, components, lib, types) | ✅ |
 | SET-07 | `.gitignore` chặn `storage/uploads`, `.env*`, `dev.db` | ✅ |
@@ -97,12 +97,12 @@
 |----|------|----|
 | WED-01 | `/admin/weddings` danh sách + trạng thái | ✅ |
 | WED-02 | `/admin/weddings/new` tạo (groom/bride/slug/date) → DRAFT | ✅ |
-| WED-03 | Validate slug: không dấu, unique, từ cấm (admin/api/login/preview) | ✅ |
+| WED-03 | Validate slug: không dấu, unique, từ cấm (admin/api/login/logout/preview/w/media/static/_next) | ✅ |
 | WED-04 | `/admin/weddings/[id]/content` sửa nội dung + cờ show* | ✅ |
 | WED-05 | Archive (không xoá thật) | ✅ |
 | WED-06 | `/preview/[id]` xem draft (chỉ admin) | ✅ |
-| WED-07 | Publish validator: bắt buộc cover + ≥1 event + weddingDate | ✅ |
-| WED-08 | Cloudflare Zero Trust middleware cho /admin/* và /preview/* | ✅ |
+| WED-07 | Publish validator: bắt buộc cover (WeddingMedia type=cover, xem FIX-01) + ≥1 event + weddingDate | ✅ |
+| WED-08 | Middleware: JWT `admin_session` bắt buộc (FIX-02) + Cloudflare Zero Trust (optional) cho khu vực admin | ✅ |
 
 ---
 
@@ -194,6 +194,33 @@
 
 ---
 
+## FIX — Audit & Hardening (2026-07-24)
+
+> Kết quả đợt audit đối chiếu docs ↔ code + rà soát bảo mật độc lập.
+> Chi tiết bảo mật: `SECURITY-REVIEW.md`. Đặc tả đã đồng bộ: `SPEC.md` v1.3.
+
+| Mã | Việc | TT |
+|----|------|----|
+| FIX-01 | Publish validator nhận cover từ `WeddingMedia` (trước kiểm `coverPath` không ai ghi → không thể publish qua luồng upload chuẩn) | ✅ |
+| FIX-02 | Middleware verify JWT `admin_session` tập trung cho /admin, /preview, /api/admin, /api/uploads, /api/exports (trước chỉ CF Access — bypass khi không cấu hình) | ✅ |
+| FIX-03 | `/media/[id]` chỉ serve thiệp PUBLISHED; admin xem được draft để preview (trước media thiệp nháp bị lộ public) | ✅ |
+| FIX-04 | RSVP với mã mời sai → 400 (trước bị bỏ qua thầm lặng, lách được `maximumPeople`) | ✅ |
+| FIX-05 | Xuất CSV chống formula injection (`= @`, `+ -` không phải số) | ✅ |
+| FIX-06 | Rate-limit public theo `ipHash`: RSVP 10 & wish 5 / 10 phút / thiệp (in-memory, best-effort) | ✅ |
+| FIX-07 | Nhóm nhỏ: `giftData` parse an toàn; `invitationCode` dùng CSPRNG; cookie logout thêm `Secure`; `/api/qr` không phản chiếu `?guest=` tuỳ ý; xoá component thừa | ✅ |
+| DOCS-01 | Đồng bộ SPEC/SECURITY-REVIEW/DECISIONS/TASKS theo code (submissionKey server-side, giới hạn wish, từ cấm slug, ADR-001) + thêm `CLAUDE.md` vào repo | ✅ |
+| FIX-08 | Lọc danh sách wedding theo trạng thái ở `/admin/weddings` (WED-TASKS-DETAIL 05e — khai ✅ nhưng chưa làm) | ⬜ |
+| FIX-09 | Nút tải QR cá nhân (`?guest=CODE`) cho từng khách ở trang Guests | ⬜ |
+| FIX-10 | OG image dùng ảnh cover thật thay vì gradient | ⬜ |
+| FIX-11 | File `.ics` thêm `VTIMEZONE` (Asia/Ho_Chi_Minh) thay vì UTC | ⬜ |
+| FIX-12 | Seed sinh `invitationCode` hex chữ thường — lookup luôn `toUpperCase()` nên link cá nhân guest demo không bao giờ khớp → dùng chung `generateInvitationCode` | ✅ |
+| FIX-13 | `GuestForm` label không gắn `htmlFor`/`id` (vi phạm a11y, E2E `getByLabel` fail) → thêm `useId` + htmlFor; sửa 2 locator `.or()` mơ hồ trong `e2e/auth.spec.ts` | ✅ |
+
+> Ghi chú: hiệu ứng **mở phong bì + animation** của prototype chưa được port sang
+> template React — sẽ xử lý trong giai đoạn nâng cấp animation thiệp (không tính vào FIX).
+
+---
+
 ## Tổng kết tiến độ
 
 | Nhóm | Xong | Tổng | % |
@@ -210,4 +237,5 @@
 | GUEST | 4 | 4 | 100% |
 | UTIL | 6 | 6 | 100% |
 | TEST | 7 | 8 | 88% |
-| **Tổng** | **86** | **87** | **99%** |
+| FIX Audit & Hardening | 10 | 14 | 71% |
+| **Tổng** | **96** | **101** | **95%** |

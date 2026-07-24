@@ -9,7 +9,11 @@ export default async function PublishPage({ params }: { params: { id: string } }
 
   const wedding = await db.wedding.findUnique({
     where: { id: params.id },
-    include: { events: true },
+    include: {
+      events: true,
+      // FIX-01: cover được lưu ở WeddingMedia (type="cover") — validator cần media
+      media: { where: { type: "cover" }, select: { type: true } },
+    },
   });
   if (!wedding) notFound();
 
