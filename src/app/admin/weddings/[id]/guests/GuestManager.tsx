@@ -132,6 +132,15 @@ export function GuestManager({ weddingId, slug, guests }: Props) {
                   >
                     {copied === guest.invitationCode ? "✓ Đã copy link" : "Copy link mời"}
                   </button>
+                  {/* FIX-09: QR cá nhân nhúng ?guest=CODE (route chỉ trả QR khi thiệp đã publish) */}
+                  <a
+                    href={`/api/qr/${slug}?guest=${guest.invitationCode}`}
+                    download={`qr-${slug}-${guest.invitationCode}.png`}
+                    title="Tải mã QR link mời cá nhân (thiệp phải đã xuất bản)"
+                    className="rounded px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-50"
+                  >
+                    Tải QR
+                  </a>
                 </div>
               </div>
               <div className="flex shrink-0 gap-1">

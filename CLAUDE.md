@@ -391,12 +391,14 @@ Business statuses are stored as database strings and validated with Zod in the a
 
 ```text
 GET  /w/[slug]
-GET  /api/calendar/[slug]
+GET  /api/calendar/[slug]    (.ics — local times with TZID Asia/Ho_Chi_Minh + VTIMEZONE)
 GET  /api/qr/[slug]          (supports ?guest=CODE — only embedded when the code exists)
 POST /api/public/weddings/[slug]/rsvp
 POST /api/public/weddings/[slug]/wishes
 GET  /media/[id]             (PUBLISHED weddings only; admin session can access drafts)
 ```
+
+The Open Graph image (`/w/[slug]/opengraph-image`) uses the wedding's real cover photo (WeddingMedia type `cover`) with a dark overlay when available, falling back to the Classic Gold gradient otherwise.
 
 ### Authentication
 
@@ -769,13 +771,11 @@ Implemented areas include:
 
 An audit & hardening pass (FIX-01…FIX-07, DOCS-01) was completed on 2026-07-24 — see `docs/TASKS-status.md` (FIX section) and `docs/SECURITY-REVIEW.md`.
 
+FIX-08…FIX-11 (admin list status filter, per-guest QR download, OG image from the real cover, `.ics` with `VTIMEZONE` Asia/Ho_Chi_Minh) were completed on 2026-07-24 — the FIX group in `docs/TASKS-status.md` is now 14/14.
+
 Remaining known tasks:
 
 - TEST-M1: real-device testing (Android Chrome, iPhone Safari, slow network, mobile forms with the virtual keyboard open).
-- FIX-08: status filter on the admin wedding list.
-- FIX-09: per-guest QR download button on the Guests page.
-- FIX-10: OG image using the real cover photo.
-- FIX-11: `.ics` with explicit `VTIMEZONE` (Asia/Ho_Chi_Minh).
 - Porting the prototype's envelope-opening animation (and richer animations) to the React template — planned as the next phase.
 
 ---

@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import {
+  VN_TZID,
+  VN_VTIMEZONE_LINES,
+  formatIcsUtc,
+  formatIcsLocalVN,
+  escapeIcs,
+} from "@/lib/utils/ics";
 
 /**
  * UTIL-02: GET /api/calendar/[slug]
  * Trả về file .ics (iCalendar) chứa các sự kiện của thiệp PUBLISHED.
+ * FIX-11: DTSTART/DTEND dùng giờ địa phương + TZID Asia/Ho_Chi_Minh (kèm
+ * VTIMEZONE) để mọi calendar client hiển thị đúng giờ như trên thiệp.
  */
 export async function GET(
   _request: Request,
@@ -32,15 +41,8 @@ export async function GET(
     return NextResponse.json({ error: "Không tìm thấy thiệp" }, { status: 404 });
   }
 
-  // Định dạng thời gian UTC: YYYYMMDDTHHMMSSZ
-  const fmt = (d: Date) =>
-    new Date(d).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
-
-  // Escape ký tự đặc biệt theo RFC 5545
-  const esc = (s: string) =>
-    s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
-
-  const now = fmt(new Date());
+  // DTSTAMP bắt buộc UTC theo RFC 5545
+  const now = formatIcsUtc(new Date());
   const couple = `${wedding.groomName} & ${wedding.brideName}`;
 
   const lines: string[] = [
@@ -49,6 +51,7 @@ export async function GET(
     "PRODID:-//Thiep Uoc//Wedding//VI",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
+    ...VN_VTIMEZONE_LINES,
   ];
 
   for (const ev of wedding.events) {
@@ -59,11 +62,11 @@ export async function GET(
       "BEGIN:VEVENT",
       `UID:${ev.id}@${wedding.slug}`,
       `DTSTAMP:${now}`,
-      `DTSTART:${fmt(start)}`,
-      `DTEND:${fmt(end)}`,
-      `SUMMARY:${esc(`${ev.title} — ${couple}`)}`,
-      `LOCATION:${esc(ev.address)}`,
-      ...(ev.description ? [`DESCRIPTION:${esc(ev.description)}`] : []),
+      `DTSTART;TZID=${VN_TZID}:${formatIcsLocalVN(start)}`,
+      `DTEND;TZID=${VN_TZID}:${formatIcsLocalVN(end)}`,
+      `SUMMARY:${escapeIcs(`${ev.title} — ${couple}`)}`,
+      `LOCATION:${escapeIcs(ev.address)}`,
+      ...(ev.description ? [`DESCRIPTION:${escapeIcs(ev.description)}`] : []),
       "END:VEVENT",
     );
   }
