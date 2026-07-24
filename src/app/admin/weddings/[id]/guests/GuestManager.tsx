@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import {
   createGuestAction,
   updateGuestAction,
@@ -186,6 +186,11 @@ function GuestForm({
   onCancel: () => void;
   isPending: boolean;
 }) {
+  // FIX-13: label phải gắn với input qua htmlFor/id — vừa đúng accessibility
+  // (CLAUDE.md yêu cầu), vừa để getByLabel trong E2E hoạt động.
+  // useId để id duy nhất khi form render nhiều lần (edit từng khách + form tạo mới).
+  const uid = useId();
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     onSubmit(new FormData(e.currentTarget));
@@ -194,8 +199,11 @@ function GuestForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="block text-sm font-medium text-gray-700">Họ tên *</label>
+        <label htmlFor={`${uid}-fullName`} className="block text-sm font-medium text-gray-700">
+          Họ tên *
+        </label>
         <input
+          id={`${uid}-fullName`}
           name="fullName"
           defaultValue={guest?.fullName}
           required
@@ -207,8 +215,11 @@ function GuestForm({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+          <label htmlFor={`${uid}-phone`} className="block text-sm font-medium text-gray-700">
+            Số điện thoại
+          </label>
           <input
+            id={`${uid}-phone`}
             name="phone"
             defaultValue={guest?.phone ?? ""}
             maxLength={20}
@@ -216,8 +227,11 @@ function GuestForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Số người tối đa *</label>
+          <label htmlFor={`${uid}-maximumPeople`} className="block text-sm font-medium text-gray-700">
+            Số người tối đa *
+          </label>
           <input
+            id={`${uid}-maximumPeople`}
             name="maximumPeople"
             type="number"
             min={1}
@@ -229,8 +243,14 @@ function GuestForm({
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Lời nhắn riêng</label>
+        <label
+          htmlFor={`${uid}-personalizedMessage`}
+          className="block text-sm font-medium text-gray-700"
+        >
+          Lời nhắn riêng
+        </label>
         <textarea
+          id={`${uid}-personalizedMessage`}
           name="personalizedMessage"
           defaultValue={guest?.personalizedMessage ?? ""}
           rows={2}

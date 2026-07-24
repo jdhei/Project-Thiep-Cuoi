@@ -24,7 +24,10 @@ test.describe("Admin Auth", () => {
     await page.goto("/admin/login");
     await page.getByRole("button", { name: /đăng nhập/i }).click();
     // At least one validation message should appear
-    await expect(page.locator("text=Email không hợp lệ").or(page.locator("text=Vui lòng nhập mật khẩu"))).toBeVisible();
+    // (.first() — cả hai thông báo có thể cùng hiển thị; .or() khớp 2 phần tử sẽ vi phạm strict mode)
+    await expect(
+      page.locator("text=Email không hợp lệ").or(page.locator("text=Vui lòng nhập mật khẩu")).first(),
+    ).toBeVisible();
   });
 
   test("shows generic error for wrong credentials", async ({ page }) => {
@@ -44,7 +47,10 @@ test.describe("Admin Auth", () => {
   test("successful login redirects to /admin dashboard", async ({ page }) => {
     await login(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     // Should see the admin dashboard
-    await expect(page.locator("text=Dashboard").or(page.locator("text=Xin chào"))).toBeVisible({
+    // (.first() — dashboard hiển thị cả "Dashboard" lẫn "Xin chào" nên .or() khớp 2 phần tử)
+    await expect(
+      page.locator("text=Dashboard").or(page.locator("text=Xin chào")).first(),
+    ).toBeVisible({
       timeout: 15_000,
     });
     // Should see admin header with logout button
