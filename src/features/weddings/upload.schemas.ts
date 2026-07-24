@@ -10,12 +10,15 @@ export const ALLOWED_MIME: Record<UploadType, string[]> = {
   gift: ["image/jpeg", "image/png", "image/webp"],
 };
 
-/** Max size in bytes */
+/**
+ * Multipart upload hiện đi qua route handler, nên giữ payload dưới giới hạn
+ * request của môi trường serverless. Có thể nâng lại khi chuyển sang direct upload.
+ */
 export const MAX_SIZE: Record<UploadType, number> = {
-  cover: 5 * 1024 * 1024, // 5 MB
-  gallery: 5 * 1024 * 1024, // 5 MB
-  music: 10 * 1024 * 1024, // 10 MB
-  gift: 3 * 1024 * 1024, // 3 MB
+  cover: 3 * 1024 * 1024,
+  gallery: 3 * 1024 * 1024,
+  music: 4 * 1024 * 1024,
+  gift: 3 * 1024 * 1024,
 };
 
 export const MIME_TO_EXT: Record<string, string> = {
