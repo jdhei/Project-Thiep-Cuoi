@@ -1,9 +1,11 @@
 import { z } from "zod";
 
 /**
- * Các "enum" nghiệp vụ. Vì SQLite không hỗ trợ enum ở tầng DB, ta lưu String
- * và ràng buộc kiểu tại tầng app bằng Zod. Đây là single source of truth.
- * Khi chuyển sang PostgreSQL có thể nâng cấp thành enum thật nếu muốn.
+ * Các "enum" nghiệp vụ. Lưu String ở DB và ràng buộc kiểu tại tầng app bằng
+ * Zod — đây là single source of truth (ADR-001). Production dùng PostgreSQL
+ * (ADR-006); PostgreSQL hỗ trợ enum thật nhưng ta chủ động giữ String để
+ * đơn giản hoá migration và tương thích dữ liệu cũ. Nâng cấp thành enum
+ * PostgreSQL là việc tách riêng nếu cần.
  */
 
 export const WEDDING_STATUS = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
