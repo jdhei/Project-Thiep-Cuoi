@@ -6,7 +6,11 @@ export const createWeddingSchema = z.object({
   groomName: z.string().trim().min(2, "Tối thiểu 2 ký tự").max(60, "Tối đa 60 ký tự"),
   brideName: z.string().trim().min(2, "Tối thiểu 2 ký tự").max(60, "Tối đa 60 ký tự"),
   slug: slugSchema,
-  weddingDate: z.string().datetime({ message: "Ngày không hợp lệ" }).optional().or(z.literal("")),
+  // FIX-15: form admin dùng <input type="date"> nên gửi "yyyy-MM-dd" — KHÔNG
+  // phải ISO datetime. z.string().datetime() (đòi giây + Z) khiến mọi lần lưu
+  // có ngày cưới đều fail "Ngày không hợp lệ". Dùng .date() để nhận đúng
+  // "yyyy-MM-dd" (và vẫn từ chối ngày không tồn tại như 2026-13-45).
+  weddingDate: z.string().date("Ngày không hợp lệ").optional().or(z.literal("")),
 });
 
 export type CreateWeddingInput = z.infer<typeof createWeddingSchema>;
@@ -16,7 +20,11 @@ export const updateWeddingSchema = z.object({
   groomName: z.string().trim().min(2, "Tối thiểu 2 ký tự").max(60, "Tối đa 60 ký tự"),
   brideName: z.string().trim().min(2, "Tối thiểu 2 ký tự").max(60, "Tối đa 60 ký tự"),
   slug: slugSchema,
-  weddingDate: z.string().datetime({ message: "Ngày không hợp lệ" }).optional().or(z.literal("")),
+  // FIX-15: form admin dùng <input type="date"> nên gửi "yyyy-MM-dd" — KHÔNG
+  // phải ISO datetime. z.string().datetime() (đòi giây + Z) khiến mọi lần lưu
+  // có ngày cưới đều fail "Ngày không hợp lệ". Dùng .date() để nhận đúng
+  // "yyyy-MM-dd" (và vẫn từ chối ngày không tồn tại như 2026-13-45).
+  weddingDate: z.string().date("Ngày không hợp lệ").optional().or(z.literal("")),
   title: z.string().trim().max(200, "Tối đa 200 ký tự").optional().or(z.literal("")),
   introduction: z.string().trim().max(2000, "Tối đa 2000 ký tự").optional().or(z.literal("")),
   loveStory: z.string().trim().max(5000, "Tối đa 5000 ký tự").optional().or(z.literal("")),

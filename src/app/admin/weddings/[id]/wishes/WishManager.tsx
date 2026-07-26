@@ -5,6 +5,7 @@ import {
   updateWishStatusAction,
   deleteWishAction,
 } from "@/features/weddings/rsvp.actions";
+import { formatVnDateTime } from "@/lib/utils/datetime";
 
 type Wish = {
   id: string;
@@ -119,13 +120,7 @@ export function WishManager({
                   </div>
                   <p className="mt-1 text-gray-600">{w.content}</p>
                   <p className="mt-1 text-xs text-gray-400">
-                    {new Date(w.createdAt).toLocaleDateString("vi-VN", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {formatVnDateTime(w.createdAt)}
                   </p>
                 </div>
                 <div className="flex gap-2">

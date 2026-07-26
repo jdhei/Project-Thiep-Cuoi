@@ -4,6 +4,7 @@ import { listWeddings, countWeddingsByStatus } from "@/features/weddings/wedding
 import { weddingStatusSchema, type WeddingStatus } from "@/lib/domain";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { WeddingActions } from "./WeddingActions";
+import { formatVnDate } from "@/lib/utils/datetime";
 
 /** FIX-08 (WED-TASKS-DETAIL 05e): tab lọc danh sách theo trạng thái. */
 const FILTER_TABS: { label: string; value: WeddingStatus | null }[] = [
@@ -112,9 +113,7 @@ export default async function WeddingsListPage({
                     <StatusBadge status={w.status} />
                   </td>
                   <td className="px-4 py-3 text-gray-600">
-                    {w.weddingDate
-                      ? new Date(w.weddingDate).toLocaleDateString("vi-VN")
-                      : "—"}
+                    {w.weddingDate ? formatVnDate(w.weddingDate) : "—"}
                   </td>
                   <td className="px-4 py-3">
                     <WeddingActions wedding={w} />

@@ -1,17 +1,18 @@
-import { format } from "date-fns";
 import type { PublicWeddingDto } from "@/features/weddings/public-dto";
 import type { PublicGalleryItem } from "@/features/weddings/public-dto";
+import { formatVnDateTime, formatVnDateLong } from "@/lib/utils/datetime";
 
+/**
+ * FIX-14: format theo múi giờ VN tường minh. Trước đây dùng date-fns `format`
+ * — format theo TZ của runtime, mà server Vercel chạy UTC nên giờ sự kiện
+ * trên thiệp public bị lệch -7h (vd 08:00 hiển thị thành 01:00).
+ */
 function fmt(iso: string): string {
-  try {
-    return format(new Date(iso), "HH:mm · dd/MM/yyyy");
-  } catch {
-    return iso;
-  }
+  return formatVnDateTime(iso) || iso;
 }
 
 export function WeddingHero({ dto }: { dto: PublicWeddingDto }) {
-  const dateLabel = dto.weddingDate ? format(new Date(dto.weddingDate), "dd 'tháng' MM 'năm' yyyy") : null;
+  const dateLabel = dto.weddingDate ? formatVnDateLong(dto.weddingDate) || null : null;
   return (
     <section
       className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-6 py-20 text-center"

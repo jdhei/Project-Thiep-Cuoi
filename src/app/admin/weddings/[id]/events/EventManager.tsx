@@ -8,6 +8,7 @@ import {
   reorderEventsAction,
 } from "@/features/weddings/event.actions";
 import type { WeddingEvent } from "@prisma/client";
+import { formatVnDateTime, toVnDateTimeLocalValue } from "@/lib/utils/datetime";
 
 type Props = {
   weddingId: string;
@@ -111,7 +112,8 @@ export function EventManager({ weddingId, events: initialEvents }: Props) {
               <div>
                 <h4 className="font-semibold text-gray-800">{event.title}</h4>
                 <p className="text-sm text-gray-500">
-                  {new Date(event.startsAt).toLocaleString("vi-VN")}
+                  {/* FIX-16: format theo giờ VN tường minh — tránh lệch giờ khi SSR (server UTC) */}
+                  {formatVnDateTime(event.startsAt)}
                 </p>
                 <p className="text-sm text-gray-600">{event.address}</p>
               </div>
@@ -187,9 +189,9 @@ function EventForm({
     onSubmit(fd);
   }
 
-  const defaultDate = event?.startsAt
-    ? new Date(event.startsAt).toISOString().slice(0, 16)
-    : "";
+  // FIX-16: hiển thị giờ VN trong ô edit — toISOString() là giờ UTC, làm mỗi
+  // chu kỳ "sửa → lưu" lệch thêm -7h.
+  const defaultDate = event?.startsAt ? toVnDateTimeLocalValue(event.startsAt) : "";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
