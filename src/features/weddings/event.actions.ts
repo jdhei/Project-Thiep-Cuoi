@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdminSession } from "@/lib/auth/require-admin";
 import { db } from "@/lib/db";
 import { createEventSchema, updateEventSchema, reorderEventsSchema } from "./event.schemas";
+import { parseVnDateTimeLocal } from "@/lib/utils/datetime";
 
 type ActionResult =
   | { success: true; id?: string }
@@ -47,7 +48,9 @@ export async function createEventAction(
     data: {
       weddingId,
       title: parsed.data.title,
-      startsAt: new Date(parsed.data.startsAt),
+      // FIX-16: giờ nhập trong form là giờ VN — neo +07:00 tường minh
+      // (new Date() trên server UTC sẽ hiểu nhầm thành giờ UTC, lệch +7h khi lưu)
+      startsAt: parseVnDateTimeLocal(parsed.data.startsAt),
       address: parsed.data.address,
       mapUrl: parsed.data.mapUrl || null,
       description: parsed.data.description || null,
@@ -95,7 +98,9 @@ export async function updateEventAction(
     where: { id: eventId },
     data: {
       title: parsed.data.title,
-      startsAt: new Date(parsed.data.startsAt),
+      // FIX-16: giờ nhập trong form là giờ VN — neo +07:00 tường minh
+      // (new Date() trên server UTC sẽ hiểu nhầm thành giờ UTC, lệch +7h khi lưu)
+      startsAt: parseVnDateTimeLocal(parsed.data.startsAt),
       address: parsed.data.address,
       mapUrl: parsed.data.mapUrl || null,
       description: parsed.data.description || null,

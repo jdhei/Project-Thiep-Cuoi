@@ -11,6 +11,7 @@ import {
   type UpdateWeddingInput,
 } from "./wedding.schemas";
 import { validatePublishReady } from "./wedding.validators";
+import { parseVnDateInput } from "@/lib/utils/datetime";
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -58,7 +59,8 @@ export async function createWeddingAction(
       groomName: parsed.data.groomName,
       brideName: parsed.data.brideName,
       slug: parsed.data.slug,
-      weddingDate: parsed.data.weddingDate ? new Date(parsed.data.weddingDate) : undefined,
+      // FIX-15: neo 00:00 giờ VN (không phải 00:00 UTC) — countdown đếm đúng tới nửa đêm VN
+      weddingDate: parsed.data.weddingDate ? parseVnDateInput(parsed.data.weddingDate) : undefined,
     },
   });
 
@@ -122,7 +124,7 @@ export async function updateWeddingAction(
       groomName: parsed.data.groomName,
       brideName: parsed.data.brideName,
       slug: parsed.data.slug,
-      weddingDate: parsed.data.weddingDate ? new Date(parsed.data.weddingDate) : null,
+      weddingDate: parsed.data.weddingDate ? parseVnDateInput(parsed.data.weddingDate) : null,
       title: parsed.data.title || null,
       introduction: parsed.data.introduction || null,
       loveStory: parsed.data.loveStory || null,

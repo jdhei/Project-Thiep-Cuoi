@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { updateWeddingAction } from "@/features/weddings/wedding.actions";
 import { ToggleSwitch } from "@/components/admin/ToggleSwitch";
+import { toVnDateInputValue } from "@/lib/utils/datetime";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -99,7 +100,9 @@ export default function WeddingContentPage() {
               name="weddingDate"
               type="date"
               defaultValue={
-                w.weddingDate ? new Date(w.weddingDate as string).toISOString().split("T")[0] : ""
+                // FIX-15: lấy phần ngày theo giờ VN — toISOString() là ngày UTC,
+                // lệch 1 ngày với đám cưới đặt giờ 0h–7h sáng.
+                w.weddingDate ? toVnDateInputValue(w.weddingDate as string) : ""
               }
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
             />

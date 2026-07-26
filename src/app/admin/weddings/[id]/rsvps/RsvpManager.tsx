@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { deleteRsvpAction } from "@/features/weddings/rsvp.actions";
+import { formatVnDate } from "@/lib/utils/datetime";
 
 type Rsvp = {
   id: string;
@@ -116,7 +117,7 @@ export function RsvpManager({
                     {r.message || "—"}
                   </td>
                   <td className="px-4 py-3 text-gray-500">
-                    {new Date(r.createdAt).toLocaleDateString("vi-VN")}
+                    {formatVnDate(r.createdAt)}
                   </td>
                   <td className="px-4 py-3">
                     <button

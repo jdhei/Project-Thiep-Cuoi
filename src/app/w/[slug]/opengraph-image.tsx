@@ -3,6 +3,7 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { db } from "@/lib/db";
 import { getEnv } from "@/lib/env";
+import { formatVnDate } from "@/lib/utils/datetime";
 
 /**
  * UTIL-04: OG image động cho link thiệp khi chia sẻ (Zalo/Facebook/Messenger...).
@@ -47,13 +48,9 @@ export default async function Image({ params }: { params: { slug: string } }) {
 
   const groom = wedding?.groomName ?? "";
   const bride = wedding?.brideName ?? "";
-  const dateStr = wedding?.weddingDate
-    ? new Date(wedding.weddingDate).toLocaleDateString("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      })
-    : "";
+  // FIX-14: format theo múi giờ VN tường minh — toLocaleDateString không truyền
+  // timeZone sẽ lấy TZ của server (UTC) → đám cưới 0h–7h sáng VN lùi 1 ngày.
+  const dateStr = wedding?.weddingDate ? formatVnDate(wedding.weddingDate) : "";
 
   const cover = wedding?.media[0];
   const coverSrc = cover ? await loadCoverDataUri(cover.path, cover.mimeType) : null;

@@ -771,7 +771,15 @@ Implemented areas include:
 
 An audit & hardening pass (FIX-01…FIX-07, DOCS-01) was completed on 2026-07-24 — see `docs/TASKS-status.md` (FIX section) and `docs/SECURITY-REVIEW.md`.
 
-FIX-08…FIX-11 (admin list status filter, per-guest QR download, OG image from the real cover, `.ics` with `VTIMEZONE` Asia/Ho_Chi_Minh) were completed on 2026-07-24 — the FIX group in `docs/TASKS-status.md` is now 14/14.
+FIX-08…FIX-11 (admin list status filter, per-guest QR download, OG image from the real cover, `.ics` with `VTIMEZONE` Asia/Ho_Chi_Minh) were completed on 2026-07-24.
+
+FIX-14…FIX-16 were completed on 2026-07-26 — the FIX group in `docs/TASKS-status.md` is now 17/17:
+
+- FIX-14: public invitation page, OG image, and admin screens rendered dates/times in the runtime timezone (UTC on Vercel), showing event times 7 hours early. All date/time rendering now goes through `src/lib/utils/datetime.ts`, which formats explicitly in Asia/Ho_Chi_Minh.
+- FIX-15: the admin forms send `weddingDate` as `yyyy-MM-dd` (from `<input type="date">`), but the schema required a full ISO datetime, so saving a wedding date via the UI always failed. The schema now uses `z.string().date()` and the value is anchored to 00:00 Vietnam time via `parseVnDateInput`.
+- FIX-16: event `startsAt` comes from `<input type="datetime-local">` as `yyyy-MM-ddTHH:mm`, which the old schema rejected; additionally the value must be parsed with an explicit `+07:00` offset (`parseVnDateTimeLocal`) and edit forms must display Vietnam wall-clock values (`toVnDateTimeLocalValue`).
+
+**Rule of thumb going forward: never format or parse dates with implicit runtime timezone. Always use the helpers in `src/lib/utils/datetime.ts` (display, form values, parsing) or `src/lib/utils/ics.ts` (calendar export).**
 
 Remaining known tasks:
 

@@ -215,6 +215,9 @@
 | FIX-11 | File `.ics` dùng giờ địa phương + `TZID=Asia/Ho_Chi_Minh` kèm block `VTIMEZONE` (util `src/lib/utils/ics.ts` + unit test) | ✅ |
 | FIX-12 | Seed sinh `invitationCode` hex chữ thường — lookup luôn `toUpperCase()` nên link cá nhân guest demo không bao giờ khớp → dùng chung `generateInvitationCode` | ✅ |
 | FIX-13 | `GuestForm` label không gắn `htmlFor`/`id` (vi phạm a11y, E2E `getByLabel` fail) → thêm `useId` + htmlFor; sửa 2 locator `.or()` mơ hồ trong `e2e/auth.spec.ts` | ✅ |
+| FIX-14 | Giờ/ngày trên trang thiệp public, OG image và admin hiển thị theo TZ runtime (UTC trên Vercel) → **lệch -7h trên production** (live: 08:00 hiển thị 01:00). Thêm util `src/lib/utils/datetime.ts` format tường minh theo Asia/Ho_Chi_Minh + unit test | ✅ |
+| FIX-15 | Không thể lưu "Ngày cưới" qua form admin: `<input type="date">` gửi `yyyy-MM-dd` nhưng schema đòi `z.string().datetime()` → luôn fail (thiệp đã có ngày thì mọi lần lưu trang Nội dung đều lỗi). Đổi sang `z.string().date()`, parse neo 00:00 giờ VN, defaultValue theo ngày VN + unit test | ✅ |
+| FIX-16 | Không thể tạo/sửa sự kiện qua form admin: `<input type="datetime-local">` gửi `yyyy-MM-ddTHH:mm` → schema fail; kể cả khi pass, `new Date()` trên server UTC hiểu nhầm giờ VN thành UTC (lệch +7h khi lưu) và form edit hiển thị giờ UTC (lệch luỹ tiến mỗi chu kỳ sửa-lưu). Nhận format datetime-local, parse `+07:00` tường minh, hiển thị lại giờ VN + unit test | ✅ |
 
 > Ghi chú: hiệu ứng **mở phong bì + animation** của prototype chưa được port sang
 > template React — sẽ xử lý trong giai đoạn nâng cấp animation thiệp (không tính vào FIX).
@@ -237,5 +240,5 @@
 | GUEST | 4 | 4 | 100% |
 | UTIL | 6 | 6 | 100% |
 | TEST | 7 | 8 | 88% |
-| FIX Audit & Hardening | 14 | 14 | 100% |
-| **Tổng** | **100** | **101** | **99%** |
+| FIX Audit & Hardening | 17 | 17 | 100% |
+| **Tổng** | **103** | **104** | **99%** |

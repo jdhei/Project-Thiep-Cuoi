@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAdminSession } from "@/lib/auth/require-admin";
 import { findWeddingById } from "@/features/weddings/wedding.repository";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { formatVnDate } from "@/lib/utils/datetime";
 
 const tabs = [
   { href: "content", label: "Nội dung" },
@@ -39,7 +40,7 @@ export default async function WeddingDetailLayout({
           <StatusBadge status={wedding.status} />
         </div>
         <p className="mt-1 text-sm text-gray-500">
-          /w/{wedding.slug} · Tạo {new Date(wedding.createdAt).toLocaleDateString("vi-VN")}
+          /w/{wedding.slug} · Tạo {formatVnDate(wedding.createdAt)}
         </p>
       </div>
 
